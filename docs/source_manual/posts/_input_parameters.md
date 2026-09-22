@@ -694,6 +694,9 @@ MaxBondRatio = 1.2
 
 For finite surface seeds, this positive, finite ratio multiplies the sum of
 covalent radii when identifying bonds used to unwrap periodic candidate images.
+It belongs to `SurfaceGenerationMode = "2D"` / `"Cluster"`: for atoms i and j,
+the unwrapping bond cutoff is `MaxBondRatio * (r_cov(i) + r_cov(j))`.
+The ordinary `Adsorption` generator and TACE model initialization do not use it.
 It is not a connectivity-repair or fitness threshold. It may be overridden in
 `[CALYPSO.GENERATOR.2D]` or `[CALYPSO.GENERATOR.CLUSTER]`; both parent and nested
 values are validated. Boolean, zero, negative, infinite, and NaN values are
@@ -1204,8 +1207,34 @@ itself is checked by TACE, not inferred from a filename extension.
 
 Additional `ShareFiles` are supported, but distinct source files must not have
 the same staged basename. Repeated paths to the same file are deduplicated.
-This integration is for the pure MLP calculator; it does not add TACE to the
-separate MLP+VASP calculator.
+TACE is supported by both the pure MLP calculator and the MLP+VASP calculator.
+For MLP+VASP, use `ICode = "MLP_VASP"` and supply the normal VASP inputs in
+addition to the TACE settings. For example, for a silicon calculation:
+
+```toml
+[CALYPSO]
+ICode = "MLP_VASP"
+
+[CALYPSO.OPT]
+MLPType = "tace"
+MLPKwargs = { model = "/absolute/path/to/model.pt", device = "cpu", dtype = "float64" }
+DFTInputPath = "./vasp_inputs"
+JobFlow = ["opt", "scf"]
+PpMap = { Si = "POTCAR_Si" }
+```
+
+Prepare `INCAR_1`, `INCAR_2` and `POTCAR_Si` in `DFTInputPath`; `PpMap` must
+cover every element of the actual structure. The initial MLP relaxation runs
+with TACE, its `CONTCAR` is saved as `CONTCAR.mlp` and becomes VASP's `POSCAR`,
+then the existing VASP `JobFlow` runs. The execution environment requires both
+TACE/ASE and VASP, using `CALYPSO_MLP_CMD` and `CALYPSO_VASP_CMD` as usual.
+
+Model staging, canonical-path deduplication, same-basename conflict detection
+and custom TACE options work in both calculators. In MLP+VASP, the selected
+model filename must also avoid known workflow inputs, outputs, logs and scripts
+(for example `POTCAR`, `INCAR_1`, `OUTCAR_1` or `calypso_run_mlp.py`); a conflicting
+name is rejected before job preparation. This does not change the existing VASP
+input requirements or introduce a new calculation workflow.
 
 #### **`OptAlgo`**
 
