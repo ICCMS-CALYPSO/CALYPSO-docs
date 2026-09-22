@@ -727,6 +727,37 @@ A Boolean parameter governs the activation of the symmetry search in structure g
 
 If True, the 2D space group is randomly chosen from the crystal system associated with the lattice of the provided substrate.
 
+For ordinary `SurfaceGenerationMode = "Adsorption"` with `AdsorptionStyle = 1`
+(`UAS`), the `pr-adsorption-incremental-bounded` feature changes initial random
+generation as follows:
+
+- With `AdsorptionSymmetry = False`, adsorption-unit centers are placed one at a
+  time, starting with units requiring larger exclusion distances. Each proposed
+  center is checked immediately against the substrate and accepted centers,
+  including in-plane periodic images. A conflict retries the current unit, not
+  every previously accepted unit. Upper and lower surfaces have separate
+  randomized grids; placement order does not change the output atom/unit order.
+- Each Fortran call allows at most 50 whole-structure attempts, with at most
+  2000 proposals per unit per attempt. The first 1000 use jittered grid positions;
+  the remaining proposals sample the full in-plane cell so the grid does not
+  exclude feasible diagonal or irregular arrangements. These are internal limits,
+  not new input parameters or a fixed wall-clock timeout.
+- With `AdsorptionSymmetry = True`, failure of symmetric candidate generation
+  returns failure instead of silently falling back to an asymmetric structure.
+  Symmetric candidates failing the substrate/distance check are also limited to
+  50 attempts. Failure uses the existing Python retry/error-handling flow.
+
+The incremental check concerns adsorption-unit centers. Molecules still use the
+existing expansion logic and user-supplied unit distance rules; this is not a new
+all-atom validation of every pair after molecular expansion. Finite attempt limits
+do not guarantee success for every feasible input. The proposal distribution is
+different from the previous all-at-once random placement.
+
+This feature does not change fixed adsorption sites (`AdsorptionStyle = 2`),
+finite `2D`/`Cluster` seeds, PSO, variable-composition scheduling, or connectivity
+repair. Source installations must rebuild the adsorption Fortran extension;
+switching a source branch alone does not update an existing compiled `.so`.
+
 Default: True
 
 #### **`SubstratePath`**
