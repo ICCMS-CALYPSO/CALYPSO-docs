@@ -39,7 +39,7 @@ jobs:
         run: uv pip install --system --requirement docs/requirements.txt
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Build HTML
         run: sphinx-build --builder html docs/source_manual docs/build_manual/html
