@@ -192,6 +192,7 @@ Defines which code to be used for local structure optimization during the struct
 :3: GULP
 :4: PWSCF
 :9: LAMMPS
+:11: ARES  # ARES2026
 :15: MLP
 :16: MlpVasp  # prerelax with MLP and then VASP
 
@@ -1642,7 +1643,7 @@ envs = [string]
 
 Some environment variables can be exported, whose command can be added here.
 
-For example: 
+For example:
 
 ```js
 envs = ["source /opt/intel/oneapi/setvars.sh"]
