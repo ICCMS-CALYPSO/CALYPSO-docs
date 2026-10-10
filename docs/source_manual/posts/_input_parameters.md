@@ -49,6 +49,8 @@ Inputs and outputs.
       - [Extra Parameters for molecule structure prediction](#extra-parameters-for-molecule-structure-prediction)
       - [**`MoleculesPath`**](#moleculespath)
       - [Extra Parameters for surface structure prediction](#extra-parameters-for-surface-structure-prediction)
+      - [**`SurfaceGenerationMode`**](#surfacegenerationmode)
+      - [**`MaxBondRatio`**](#maxbondratio)
       - [**`AdsorptionStyle`**](#adsorptionstyle)
       - [**`AdsorptionSymmetry`**](#adsorptionsymmetry)
       - [**`SubstratePath`**](#substratepath)
@@ -107,6 +109,7 @@ Inputs and outputs.
       - [**`password`**](#password)
       - [**`key_filename`**](#key_filename)
       - [**`remote_root`**](#remote_root)
+      - [**`shared_filesystem`**](#shared_filesystem)
     - [scheduler and related parameters](#scheduler-and-related-parameters)
       - [**`scheduler`**](#scheduler)
       - [**`queue`**](#queue)
@@ -264,6 +267,30 @@ Define the descriptor of structures, it will be used to determine whether two st
 
 BCM is faster than CCF, so we suggest to use BCM for most cases.
 if encountering the similarity warning when generating structures, one should decrease the value of `SimThreshold` or turn off the similarity compare by setting `ISim = 0`.
+
+BCM caches the structure's element information and uses vectorized element masks.
+This improves descriptor calculation cost without changing the whole-cell BCM
+definition, matrix ordering, or `SimThreshold`; no new performance switch is needed.
+
+For a single surface, BCM automatically focuses on bonds with at least one
+adsorbate endpoint when the substrate atom count is known. For interfaces, it
+focuses on bonds involving the interface region before the two substrate blocks.
+Substrate-substrate bonds are excluded from both the retained bonds and their
+radial reference distances, including when the substrate and adsorbate share an
+element. Bonds between the variable region and substrate remain included, so
+binding-site differences are retained. This applies to BCM, not CCF.
+
+Surface supercell expansion is included in the substrate count. Automatic cleavage
+sets the focus after the substrate has been generated. Nested multi-surface
+`FormulaUnit` layouts interleave substrate and adsorbate blocks and therefore
+retain whole-cell BCM. Missing/unresolved substrates also retain whole-cell BCM.
+There is no additional TOML focus flag. A descriptor with no retained neighbours
+can be NaN and should not be interpreted as a reliable similarity match.
+
+Use a fresh calculation directory when changing between whole-cell and focused
+BCM: a previous `descriptor.pkl` contains fingerprints with different semantics.
+Automatic descriptor migration and composition-bucket archives are not provided
+by this feature.
 
 Default: 1
 
@@ -586,6 +613,91 @@ Default: {}
 
 
 #### Extra Parameters for surface structure prediction
+
+#### **`SurfaceGenerationMode`**
+
+```text
+SurfaceGenerationMode = "Adsorption" | "2D" | "Cluster"
+```
+
+Default: `Adsorption`, retaining the existing adsorption generator.
+`2D` uses `LayerGenerator` to create a finite island; `Cluster` uses
+`ClusterGenerator` to create a finite cluster. These modes change random initial
+generation only: the substrate cell and fixed-atom constraints are preserved,
+and subsequent PSO evolution retains its existing behavior.
+
+Finite modes support one upper surface. Candidates keep their original orientation
+(zero rotation), receive random in-plane translations, and must fit inside the
+substrate cell. Disconnected components and isolated atoms are allowed.
+`DistanceOfIon` controls substrate-seed minimum distances; a colliding placement
+is rejected. These modes do not perform connectivity repair or introduce a new
+fitness function, variable-composition scheduling, or adaptive NBest.
+
+Example for a two-dimensional island:
+
+```toml
+[CALYPSO]
+IType = "SURFACE"
+
+[CALYPSO.GENERATOR]
+SurfaceGenerationMode = "2D"
+FormulaUnit = ["(N)16"]
+SubstratePath = "./sub.vasp"
+RangeOfZAxis = [3.0, 1.2]
+MaxBondRatio = 1.2
+
+[CALYPSO.GENERATOR.2D]
+Area = 40.0
+SpaceGroup = [1]
+GenerateMethod = "random"
+Thicknesses = [0.001]
+Gaps = [15.0]
+```
+
+For `2D`, `Area` is required and cannot exceed the substrate supercell area.
+The highest seed atom is placed at the sampled `RangeOfZAxis` height above the
+highest substrate atom. Candidate footprint and collision checks still apply;
+an acceptable area alone does not guarantee a placement.
+
+Example for a finite cluster:
+
+```toml
+[CALYPSO]
+IType = "SURFACE"
+
+[CALYPSO.GENERATOR]
+SurfaceGenerationMode = "Cluster"
+FormulaUnit = ["(N)16"]
+SubstratePath = "./sub.vasp"
+RangeOfZAxis = [3.0, 1.2]
+MaxBondRatio = 1.2
+
+[CALYPSO.GENERATOR.CLUSTER]
+SpaceGroup = [5]
+GenerateMethod = "fortran"
+Vacancy = [15.0, 15.0, 15.0]
+ClusterType = "plane"
+```
+
+For `Cluster`, the lowest seed atom is placed at the sampled height. Cluster
+`SpaceGroup` values are the point-group indices supported by `ClusterGenerator`,
+not three-dimensional crystallographic space-group numbers. Nested `2D` or
+`CLUSTER` settings override the corresponding parent generator settings for the
+child generator. Invalid child configuration is reported directly rather than
+being retried as a random placement failure.
+
+#### **`MaxBondRatio`**
+
+```text
+MaxBondRatio = 1.2
+```
+
+For finite surface seeds, this positive, finite ratio multiplies the sum of
+covalent radii when identifying bonds used to unwrap periodic candidate images.
+It is not a connectivity-repair or fitness threshold. It may be overridden in
+`[CALYPSO.GENERATOR.2D]` or `[CALYPSO.GENERATOR.CLUSTER]`; both parent and nested
+values are validated. Boolean, zero, negative, infinite, and NaN values are
+invalid. `DistanceOfIon` remains the minimum-distance rule for substrate placement.
 
 #### **`AdsorptionStyle`**
 
@@ -1047,6 +1159,8 @@ MLPType = "dp"
 :emt:
 :lj:
 :morse:
+:tace: TACE ASE calculator with a local trained model
+:custom: complete user-provided optimization script (requires `CustomizableScript` and `RunCustomizableScriptCMD`)
 
 Choose which type of mlp will be used.
 
@@ -1058,11 +1172,40 @@ There is no default value. One must set it manually.
 MLPKwargs = {"model"="M3GNet-MP-2021.2.8-PES"}
 ```
 
-The parameters of mlp initialization.
+The parameters of MLP initialization. Use `MLPKwargs` for the calculator's
+constructor options. The older `MLPParams` entry in generated default templates
+is not wired to the calculator's keyword arguments and should not be used for
+this TACE configuration. For `MLPType = "custom"`, these values are not injected
+into the supplied script; configure initialization in the script itself.
 chgnet: {"model"="0.3.0", "check_cuda_mem"=true, "on_isolated_atoms"="warn"}
 dp: {"model": "path/to/model"}
 
 Default: {}
+
+For TACE, use `ICode = "MLP"` and provide a local regular model file:
+
+```toml
+[CALYPSO]
+ICode = "MLP"
+
+[CALYPSO.OPT]
+MLPType = "tace"
+MLPKwargs = { model = "/absolute/path/to/model.pt", device = "cpu", dtype = "float64", fidelity_idx = 0, neighborlist_backend = "ase" }
+```
+
+Install the external `tace` package in the execution environment. CALYPSO resolves
+the model on the controller, verifies that it is a regular file, and automatically
+adds it to the existing shared-file upload flow. The generated task opens the
+staged basename, so the execution node does not need the controller's absolute
+path. An absolute model path is recommended; relative paths are resolved against
+the controller process's working directory. No model download is performed.
+Custom constructor options are forwarded to `TACEAseCalc`. Model compatibility
+itself is checked by TACE, not inferred from a filename extension.
+
+Additional `ShareFiles` are supported, but distinct source files must not have
+the same staged basename. Repeated paths to the same file are deduplicated.
+This integration is for the pure MLP calculator; it does not add TACE to the
+separate MLP+VASP calculator.
 
 #### **`OptAlgo`**
 
@@ -1215,6 +1358,13 @@ All the major output files are listed in the folder of "**results**":
 CALYPSO calculations often generate a large number of structures. Therefore, it is essential to have a versatile tool for efficient data analysis.
 
 Introducing the **CALYPSO ANALYSIS KIT (CAK)**, a tool designed for automatic structure analysis.
+
+When evolution plotting is enabled, `pycak` selects Matplotlib's non-interactive
+`Agg` backend before importing pyplot. This permits PNG output on SSH/headless
+machines and from worker threads without opening a GUI. Existing full geometry,
+symmetry and CSV analysis remain unchanged; this is not a lightweight analysis
+mode. Backend selection affects the whole Python process, so applications that
+also need interactive figures should run batch analysis in a separate process.
 
 Once CALYPSO is installed, the `pycak` tool will be available for use from the command line.
 
@@ -1487,6 +1637,52 @@ remote_root = string
 Calculations of each structure will be conducted in `remote_root` if provided, otherwise, the calculation will be conducted in the "./results/opt_task/xxx" directory.
 
 Default: null
+
+#### **`shared_filesystem`**
+
+```text
+shared_filesystem = false
+```
+
+This is a top-level field of a machine JSON object, next to `executor` and
+`remote_root`. It requires the Orchestrator SSH/shared-filesystem update; the
+CALYPSO submodule pin is not automatically upgraded by the CALYPSO feature changes.
+
+With `executor = "ssh"`, the default `false` keeps remote jobs under
+`remote_root/<submit_batch>` and preserves existing machine IDs. Set it to `true`
+only when controller and execution node see the same directory at the same
+absolute path. The shared mode uses `remote_root` directly, without an added
+submit-batch directory. Assign a distinct root per independent calculation and
+unique job directories to avoid collisions; this option does not verify mounts
+or provide directory locking.
+
+```json
+{
+  "name": "shared-worker",
+  "executor": "ssh",
+  "scheduler": "shell",
+  "host": "worker-host",
+  "port": 22,
+  "username": "user",
+  "remote_root": "/shared/my-run/results/opt_task",
+  "shared_filesystem": true,
+  "numb_node": 1,
+  "numb_cpu_per_node": 1,
+  "machine_capacity": 1
+}
+```
+
+SSH shared-file links are idempotent: an existing link to the correct source is
+reused, including relative links and a matching concurrent creation. An ordinary
+file or a link to a different source raises an error and is never overwritten.
+This protects repeated submission but does not replace missing-task or orphaned
+job recovery.
+
+The shell scheduler emits an explicit `__ORCHESTRATOR_JOB_ID__=` marker for its
+background process ID. Environment/module output, including unrelated numbers,
+does not change the parsed ID. Legacy output consisting only of a single positive
+integer remains accepted; unmarked mixed output is rejected instead of guessing.
+No extra PID parsing option is needed.
 
 ### scheduler and related parameters
 #### **`scheduler`**
