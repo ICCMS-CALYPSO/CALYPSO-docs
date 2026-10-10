@@ -40,6 +40,7 @@ Copyright © 2010-2024 CALYPSO Developers Group. All Rights Reserved.
    posts/_installation
    posts/_quick_start
    posts/_input_parameters
+   posts/_custom_mlp
    posts/_case_studies
    posts/_calypso_subcommands
    posts/_calypso_as_a_library

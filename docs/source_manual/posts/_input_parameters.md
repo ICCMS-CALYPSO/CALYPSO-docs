@@ -1153,7 +1153,8 @@ CustomizableScript: str
 
 While you can use this code to run your own, the output must conform to the format
 and file names of the `ICode` you select. For instance, an `ICode` of 1 (VASP) requires
-VASP-compatible (name and format) output. Documentation with more details will be provided soon.
+VASP-compatible (name and format) output. For user-provided MLP optimization
+scripts, use `MLPType = "custom"`; see [User-provided MLP optimization scripts](_custom_mlp.md).
 
 Default: None
 
