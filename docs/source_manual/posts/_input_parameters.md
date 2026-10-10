@@ -45,20 +45,26 @@ Inputs and outputs.
       - [**`Gaps`**](#gaps)
       - [Extra Parameters for cluster structure prediction](#extra-parameters-for-cluster-structure-prediction)
       - [**`Vacancy`**](#vacancy)
-      - [**`cluster_type`**](#cluster_type)
+      - [**`ClusterType`**](#clustertype)
       - [Extra Parameters for molecule structure prediction](#extra-parameters-for-molecule-structure-prediction)
       - [**`MoleculesPath`**](#moleculespath)
       - [Extra Parameters for surface structure prediction](#extra-parameters-for-surface-structure-prediction)
       - [**`SurfaceGenerationMode`**](#surfacegenerationmode)
+      - [**`[CALYPSO.GENERATOR.2D]`**](#calypsogenerator2d)
+      - [**`[CALYPSO.GENERATOR.CLUSTER]`**](#calypsogeneratorcluster)
       - [**`MaxBondRatio`**](#maxbondratio)
+      - [**`FormulaUnit`** (surface)](#formulaunit-surface)
+      - [**`DistanceOfIon`** (surface)](#distanceofion-surface)
       - [**`AdsorptionStyle`**](#adsorptionstyle)
       - [**`AdsorptionSymmetry`**](#adsorptionsymmetry)
       - [**`SubstratePath`**](#substratepath)
+      - [**`[CALYPSO.GENERATOR.CLEAVE]`**](#calypsogeneratorcleave)
       - [**`Supercell`**](#supercell)
       - [**`RangeOfZAxis`**](#rangeofzaxis)
-      - [**`PointPath`**](#pointpath)
-      - [**`MoleculesPath`**](#moleculespath-1)
       - [**`FixSiteC`**](#fixsitec)
+      - [**`PointPath`**](#pointpath)
+      - [**`MoleculesPath`** (surface)](#moleculespath-surface)
+      - [**`MolRotate`**](#molrotate)
       - [**`TranslateAtomPosition`**](#translateatomposition)
       - [**`RotateAtomPosition`**](#rotateatomposition)
       - [Extra Parameters for interface structure prediction](#extra-parameters-for-interface-structure-prediction)
@@ -73,6 +79,7 @@ Inputs and outputs.
       - [**`TranslationLimitA`**](#translationlimita)
       - [**`TranslationLimitB`**](#translationlimitb)
       - [**`CoordinateNumber`**](#coordinatenumber)
+      - [**`LimitGrowth`**](#limitgrowth)
     - [Parameters for optimization in `CALYPSO.OPT` block](#parameters-for-optimization-in-calypsoopt-block)
       - [**`DFTInputPath`**](#dftinputpath)
       - [**`JobFlow`**](#jobflow)
@@ -585,7 +592,7 @@ optimization for large systems since computationally VASP calculations are very 
 
 Default: [10.0 10.0 10.0]
 
-#### **`cluster_type`**
+#### **`ClusterType`**
 
 ```text
 ClusterType = string 
@@ -614,106 +621,133 @@ Default: {}
 
 #### Extra Parameters for surface structure prediction
 
+Surface prediction (`IType = 5`) places adsorbates on a fixed substrate slab. A
+complete example of every mode is given in the case studies.
+
 #### **`SurfaceGenerationMode`**
 
 ```text
 SurfaceGenerationMode = "Adsorption" | "2D" | "Cluster"
 ```
 
-Default: `Adsorption`, retaining the existing adsorption generator.
-`2D` uses `LayerGenerator` to create a finite island; `Cluster` uses
-`ClusterGenerator` to create a finite cluster. These modes change random initial
-generation only: the substrate cell and fixed-atom constraints are preserved,
-and subsequent PSO evolution retains its existing behavior.
+| Mode         | What is placed on the substrate                                                          |
+|:-------------|:-----------------------------------------------------------------------------------------|
+| `Adsorption` | Adatoms, functional groups and molecules on adsorption sites (one or both sides).        |
+| `2D`         | A 2D layer from the layer generator, set with `[CALYPSO.GENERATOR.2D]`.                  |
+| `Cluster`    | A cluster from the cluster generator, set with `[CALYPSO.GENERATOR.CLUSTER]`.            |
 
-Finite modes support one upper surface. Candidates keep their original orientation
-(zero rotation), receive random in-plane translations, and must fit inside the
-substrate cell. Disconnected components and isolated atoms are allowed.
-`DistanceOfIon` controls substrate-seed minimum distances; a colliding placement
-is rejected. These modes do not perform connectivity repair or introduce a new
-fitness function, variable-composition scheduling, or adaptive NBest.
+For `2D` and `Cluster`:
 
-Example for a two-dimensional island:
+- only the upper surface is used: write a flat `FormulaUnit` (e.g. `["(B)8"]`) and a
+  flat `RangeOfZAxis` (e.g. `[2.0, 2.4]`);
+- the lowest seed atom is placed `RangeOfZAxis` above the topmost substrate atom;
+  2D islands and plane clusters are rotated about z, other clusters in 3D, and every
+  placement is checked against `DistanceOfIon`;
+- PSO uses the surface PSO: each seed atom moves in-plane on its own and keeps its
+  height.
+
+Default: `Adsorption`
+
+#### **`[CALYPSO.GENERATOR.2D]`**
+
+Options of the 2D layer, used only with `SurfaceGenerationMode = "2D"`.
+
+| Key              | Description                                                                                         | Default       |
+|:-----------------|:----------------------------------------------------------------------------------------------------|:--------------|
+| `Coverage`       | `"Full"`: the layer uses the substrate cell and covers the whole surface. `"Island"`: a finite flake of `Area`. | `"Full"` without `Area`, otherwise `"Island"` |
+| `Area`           | Area of the island (angstrom^2), must be smaller than the substrate supercell area.                  | required for `Island` |
+| `Thicknesses`    | Layer thickness, e.g. `[0]` for an atomically flat layer, `[1.0]` for buckling up to 1 angstrom.     | parent `Thicknesses` |
+| `SpaceGroup`     | Layer groups, e.g. `["1-80"]`. `Full` keeps only the groups compatible with the substrate cell.     | parent `SpaceGroup` |
+| `Gaps`           | Vacuum of the generated layer (angstrom).                                                            | parent `Gaps` |
+| `MaxBondRatio`   | Overrides the parent `MaxBondRatio`.                                                                 | parent value  |
 
 ```toml
-[CALYPSO]
-IType = "SURFACE"
-
-[CALYPSO.GENERATOR]
-SurfaceGenerationMode = "2D"
-FormulaUnit = ["(N)16"]
-SubstratePath = "./sub.vasp"
-RangeOfZAxis = [3.0, 1.2]
-MaxBondRatio = 1.2
-
 [CALYPSO.GENERATOR.2D]
-Area = 40.0
-SpaceGroup = [1]
-GenerateMethod = "random"
-Thicknesses = [0.001]
-Gaps = [15.0]
+Coverage = "Island"
+Area = 25
+Thicknesses = [0.2]
+SpaceGroup = ["1-80"]
+Gaps = [15]
 ```
 
-For `2D`, `Area` is required and cannot exceed the substrate supercell area.
-The highest seed atom is placed at the sampled `RangeOfZAxis` height above the
-highest substrate atom. Candidate footprint and collision checks still apply;
-an acceptable area alone does not guarantee a placement.
+#### **`[CALYPSO.GENERATOR.CLUSTER]`**
 
-Example for a finite cluster:
+Options of the cluster, used only with `SurfaceGenerationMode = "Cluster"`.
+
+| Key              | Description                                                                          | Default       |
+|:-----------------|:-------------------------------------------------------------------------------------|:--------------|
+| `ClusterType`    | `normal` (uses `VolumeUnit`), `cage` or `plane`.                                     | `normal`      |
+| `SpaceGroup`     | Point groups 1-31; `plane` supports 1-7 and 14-18.                                    | parent `SpaceGroup` |
+| `GenerateMethod` | `fortran` or `random`.                                                               | `fortran`     |
+| `Vacancy`        | Vacuum around the generated cluster (angstrom).                                      | `[15, 15, 15]`|
+| `MaxBondRatio`   | Overrides the parent `MaxBondRatio`.                                                 | parent value  |
 
 ```toml
-[CALYPSO]
-IType = "SURFACE"
-
-[CALYPSO.GENERATOR]
-SurfaceGenerationMode = "Cluster"
-FormulaUnit = ["(N)16"]
-SubstratePath = "./sub.vasp"
-RangeOfZAxis = [3.0, 1.2]
-MaxBondRatio = 1.2
-
 [CALYPSO.GENERATOR.CLUSTER]
-SpaceGroup = [5]
+ClusterType = "normal"
+SpaceGroup = ["1-31"]
 GenerateMethod = "fortran"
 Vacancy = [15.0, 15.0, 15.0]
-ClusterType = "plane"
 ```
-
-For `Cluster`, the lowest seed atom is placed at the sampled height. Cluster
-`SpaceGroup` values are the point-group indices supported by `ClusterGenerator`,
-not three-dimensional crystallographic space-group numbers. Nested `2D` or
-`CLUSTER` settings override the corresponding parent generator settings for the
-child generator. Invalid child configuration is reported directly rather than
-being retried as a random placement failure.
 
 #### **`MaxBondRatio`**
 
 ```text
-MaxBondRatio = 1.2
+MaxBondRatio = float
 ```
 
-For finite surface seeds, this positive, finite ratio multiplies the sum of
-covalent radii when identifying bonds used to unwrap periodic candidate images.
-It belongs to `SurfaceGenerationMode = "2D"` / `"Cluster"`: for atoms i and j,
-the unwrapping bond cutoff is `MaxBondRatio * (r_cov(i) + r_cov(j))`.
-The ordinary `Adsorption` generator and TACE model initialization do not use it.
-It is not a connectivity-repair or fitness threshold. It may be overridden in
-`[CALYPSO.GENERATOR.2D]` or `[CALYPSO.GENERATOR.CLUSTER]`; both parent and nested
-values are validated. Boolean, zero, negative, infinite, and NaN values are
-invalid. `DistanceOfIon` remains the minimum-distance rule for substrate placement.
+Only for `2D` and `Cluster`. Two seed atoms i and j are treated as bonded when their
+distance is below `MaxBondRatio * (r_cov(i) + r_cov(j))`; this is used to keep the
+seed in one piece when it is taken out of its periodic cell. It must be a positive
+finite number and can be overridden in the `2D` / `CLUSTER` block.
+
+Default: 1.2
+
+#### **`FormulaUnit`** (surface)
+
+```text
+FormulaUnit = list of string
+```
+
+Adsorbates on each side of the substrate. Atoms are written in `()`, functional
+groups and molecules in `{}` and defined in `MoleculesPath`.
+
+| Layout          | Example                                                    |
+|:----------------|:-----------------------------------------------------------|
+| Upper side      | `FormulaUnit = ["(H)2{OH}1"]`                              |
+| Both sides      | `FormulaUnit = ["(H)2", "{OH}1"]` (upper, lower)           |
+| Multi-surface   | `FormulaUnit = [["(H)2{OH}1", ""], ["(H)3", "{OH}1"], ["", "(O)2"]]`, one `[upper, lower]` pair per substrate slab, see `SubstratePath` |
+
+#### **`DistanceOfIon`** (surface)
+
+```text
+DistanceOfIon = list
+```
+
+Minimal distances in angstrom. List the substrate elements first, then the
+adsorption units; a symbol may appear in both parts, e.g. carbon adatoms on
+diamond:
+
+```toml
+DistanceOfIon = [["X", "C", "H", "C"],
+                 ["C", 1.0, 1.2, 1.2],
+                 ["H", 1.2, 1.2, 1.2],
+                 ["C", 1.2, 1.2, 1.2]]
+```
+
+The table must be symmetric. Missing atom-atom pairs are estimated from covalent
+radii; pairs with a molecule must be given.
 
 #### **`AdsorptionStyle`**
 
 ```text
-AdsorptionStyle = integer
+AdsorptionStyle = integer or string
 ```
 
-Determines which method should be adopted for generation of adsorption structures in the simulation cell.
-
-| AdsorptionStyle int | AdsorptionStyle string | Method                                                        |
-|:--------------------|:-----------------------|:--------------------------------------------------------------|
-| 1                   | `UAS`                  | Unfixed adsorption sites.<br>Random generations of structures.|
-| 2                   | `FAS`                  | Fixed adsorption sites.<br>Generating structures with fixed positions of adatom.              
+| AdsorptionStyle int | AdsorptionStyle string | Method                                                            |
+|:--------------------|:-----------------------|:------------------------------------------------------------------|
+| 1                   | `UAS`                  | Unfixed adsorption sites: sites are generated randomly.           |
+| 2                   | `FAS`                  | Fixed adsorption sites: sites are read from `PointPath`.          |
 
 Default: 1
 
@@ -723,40 +757,10 @@ Default: 1
 AdsorptionSymmetry = bool
 ```
 
-A Boolean parameter governs the activation of the symmetry search in structure generation.
-
-If True, the 2D space group is randomly chosen from the crystal system associated with the lattice of the provided substrate.
-
-For ordinary `SurfaceGenerationMode = "Adsorption"` with `AdsorptionStyle = 1`
-(`UAS`), the `pr-adsorption-incremental-bounded` feature changes initial random
-generation as follows:
-
-- With `AdsorptionSymmetry = False`, adsorption-unit centers are placed one at a
-  time, starting with units requiring larger exclusion distances. Each proposed
-  center is checked immediately against the substrate and accepted centers,
-  including in-plane periodic images. A conflict retries the current unit, not
-  every previously accepted unit. Upper and lower surfaces have separate
-  randomized grids; placement order does not change the output atom/unit order.
-- Each Fortran call allows at most 50 whole-structure attempts, with at most
-  2000 proposals per unit per attempt. The first 1000 use jittered grid positions;
-  the remaining proposals sample the full in-plane cell so the grid does not
-  exclude feasible diagonal or irregular arrangements. These are internal limits,
-  not new input parameters or a fixed wall-clock timeout.
-- With `AdsorptionSymmetry = True`, failure of symmetric candidate generation
-  returns failure instead of silently falling back to an asymmetric structure.
-  Symmetric candidates failing the substrate/distance check are also limited to
-  50 attempts. Failure uses the existing Python retry/error-handling flow.
-
-The incremental check concerns adsorption-unit centers. Molecules still use the
-existing expansion logic and user-supplied unit distance rules; this is not a new
-all-atom validation of every pair after molecular expansion. Finite attempt limits
-do not guarantee success for every feasible input. The proposal distribution is
-different from the previous all-at-once random placement.
-
-This feature does not change fixed adsorption sites (`AdsorptionStyle = 2`),
-finite `2D`/`Cluster` seeds, PSO, variable-composition scheduling, or connectivity
-repair. Source installations must rebuild the adsorption Fortran extension;
-switching a source branch alone does not update an existing compiled `.so`.
+If true, the adsorption sites are generated with a 2D space group chosen from the
+crystal system of the substrate lattice. If false, the units are placed one by one
+(units with larger distances first) and each new unit is checked against the
+substrate and the units already placed.
 
 Default: True
 
@@ -766,15 +770,41 @@ Default: True
 SubstratePath = string
 ```
 
-The file path for the substrate file.
+Path of the substrate slab (VASP format, `.vasp`). `Selective Dynamics` flags are
+kept during optimization. The c axis must be perpendicular to the ab plane.
 
-The `selective dynamics` feature is also supported, allowing for control the respective coordinates of substrate atoms will be allowed to change during the ionic relaxation.
+Set `SubstratePath = "Automatic"` to cleave the substrate from a bulk crystal with
+the `[CALYPSO.GENERATOR.CLEAVE]` block below.
 
-:::{warning}
-Only the VASP format is accepted, with `.vasp` suffix.
-:::
+For a multi-surface substrate (several slabs in one cell), add the slab index
+(1, 2, ..., from bottom to top) as an extra column after the coordinates (after the
+`Selective Dynamics` flags if present):
 
-There is no default value. You must supply substrate file and its path if you want to use surface module.
+```text
+    0.33230999  0.00000000  0.60000002  F  F  F  3
+```
+
+There is no default value.
+
+#### **`[CALYPSO.GENERATOR.CLEAVE]`**
+
+Used when `SubstratePath = "Automatic"`. The keys are the TOML keys of the `cleave`
+subcommand (see [calypso.x subcommands](_calypso_subcommands.md)) and are
+case-sensitive. The slab is written as `POSCAR_{millerindex}_slab.vasp` next to
+`input.toml`.
+
+```toml
+[CALYPSO.GENERATOR]
+SubstratePath = "Automatic"
+
+[CALYPSO.GENERATOR.CLEAVE]
+MillerIndex = [1, 0, 0]
+MatrixNotation = [[2, 0], [0, 2]]
+SpaceGroup = 225
+LatticeParameters = [4.10, 4.10, 4.10, 90.0, 90.0, 90.0]
+IrreducibleAtoms = [['Ag', 0.0, 0.0, 0.0]]
+CapBondsWithH = false
+```
 
 #### **`Supercell`**
 
@@ -782,9 +812,9 @@ There is no default value. You must supply substrate file and its path if you wa
 Supercell = list of list of integer
 ```
 
-This 2x2 matrix is used to define the substrate. Whose lattice vectors can be obtained via multiplying this matrix by the ideal lattice vectors.
+2x2 matrix that expands the substrate in the ab plane, e.g. `[[2, 0], [0, 2]]`.
 
-Default = [[1, 0], [0, 1]]
+Default: [[1, 0], [0, 1]]
 
 #### **`RangeOfZAxis`**
 
@@ -792,89 +822,19 @@ Default = [[1, 0], [0, 1]]
 RangeOfZAxis = list of float
 ```
 
-Defines the range of distances between the 2D layer and adatoms. Two integers of this parameters specify the maximal and minimal distance, respectively.
+Height range (angstrom) of the adsorbates above (or below) the substrate surface;
+the order of the two values does not matter.
+
+| Layout          | Example                                                    |
+|:----------------|:-----------------------------------------------------------|
+| One side        | `RangeOfZAxis = [1.7, 1.2]`                                |
+| Both sides      | `RangeOfZAxis = [1.7, 1.2]` (same for both) or `[[1.7, 1.2], [1.5, 1.0]]` (upper, lower) |
+| Multi-surface   | `RangeOfZAxis = [[[1.0, 1.3], []], [[1.0, 1.3], [1.4, 1.3]], [[], [1.3, 1.4]]]`, same layout as `FormulaUnit` |
+
+For `2D` and `Cluster` it is the gap between the topmost substrate atom and the
+lowest seed atom.
 
 Default: [1.7, 1.2]
-
-#### **`PointPath`**
-
-```text
-PointPath = string
-```
-
-Path for the fixed adsorption sites file.
-
-Site coordinates are based on the substrate's lattice and `supercell` parameter.
-
-The Z-coordinate of points are excluded; only the XY coordinates are recorded.
-
-There is no default value. You must supply point file and path if you are using `AdsorptionStyle = 2`.
-
-Two file formats are supported:
-
-- VASP-like format
-
-- JSON format
-
-Both allow for coordinates to be specified in either `Direct` or `Cartesian` format.
-
-:::{warning}
-The lattice parameters must be identical to those of the substrate.
-:::
-
-**VASP-like format (POINT.vasp)**
-
-```text
-points
-1.0
-        2.4593999386         0.0000000000         0.0000000000
-       -1.2296999693         2.1299028249         0.0000000000
-        0.0000000000         0.0000000000        15.0000000000
-  H O OH
-  1 1 1
-Direct
-     0.666666687         0.333333343         0.500000000
-     0.333333313         0.666666627         0.500000000
-     0.666666687         0.333333343         0.500000000
-```
-
-- Scaling factor support 1.0 only.
-
-- Species names support species of atoms or functional group or molecule.
-
-- The selective dynamics format of POSCAR is not supported.
-
-**JSON format (POINT.json)**
-
-```js
-{
-    "coordinate system": "Direct",
-        "point":
-        {
-            "H": [[0.666666687, 0.333333343, 0.500000000]],
-            "O": [[0.333333313, 0.666666627, 0.500000000]],
-            "OH": [[0.666666687, 0.333333343, 0.500000000]]
-        }
-}
-```
-
-- Do not provided substrate lattice in this format.
-
-#### **`MoleculesPath`**
-
-```text
-MoleculesPath = dict of string
-```
-
-The path of molecules. And the molecular name in FormulaUnit will be parsed by this key.
-
-For example, if we have `FormulaUnit = ["(H)2{OH}2{H2O}4"]`, then `MoleculesPath = {'OH' = './OH.xyz', 'H2O' = './H2O.xyz'}`, so that H2O molecular file will be parsed as H2O.xyz and OH functional group will be parsed as OH.xyz.
-
-:::{warning}
-Only the XYZ format is accepted, with `.xyz` suffix.
-:::
-
-There is no default value. You must supply moleculer files and paths when the system contains molecules or functional groups within the `FormulateUnit`.
 
 #### **`FixSiteC`**
 
@@ -882,38 +842,113 @@ There is no default value. You must supply moleculer files and paths when the sy
 FixSiteC = bool
 ```
 
-| FixSitesC | Method |
-|:----------|:-----------------------------------------------------------------------------------|
-| `True`    | The Z-coordinate of the adatom is fixed to the mean value of `RangeOfZAxis`.       |
-| `False`   |  The Z-coordinate of the adatom is randomly sampled from the `RangeOfZAxis` range. |          
+| FixSiteC | Method                                                                              |
+|:---------|:------------------------------------------------------------------------------------|
+| `True`   | The height of the adatoms is the mean value of `RangeOfZAxis`.                      |
+| `False`  | The height of the adatoms is sampled randomly within `RangeOfZAxis`.                |
+
+Default: False
+
+#### **`PointPath`**
+
+```text
+PointPath = string
+```
+
+File of the fixed adsorption sites, required for `AdsorptionStyle = 2`. Sites are
+given in the primitive substrate cell and are expanded with `Supercell`; only x and
+y are used. VASP-like (`.vasp`) and JSON (`.json`) files are supported, with
+`Direct` or `Cartesian` coordinates.
+
+**VASP-like format** (scaling factor 1.0, lattice identical to the substrate, no
+`Selective Dynamics`):
+
+```text
+points
+1.0
+        2.4593999386         0.0000000000         0.0000000000
+       -1.2296999693         2.1299028249         0.0000000000
+        0.0000000000         0.0000000000        15.0000000000
+  H O OH
+  1 1 1
+Direct
+     0.666666687         0.333333343         0.500000000
+     0.333333313         0.666666627         0.500000000
+     0.666666687         0.333333343         0.500000000
+```
+
+**JSON format** (no lattice):
+
+```js
+{
+    "coordinate system": "Direct",
+    "point": {
+        "H":  [[0.666670024, 0.333330005, 0.5],
+               [0.333330005, 0.666670024, 0.5]],
+        "O":  [[0.465000004, 0.491389990, 0.5]]
+    }
+}
+```
+
+Every adsorption unit in `FormulaUnit` needs at least as many sites as units.
+
+There is no default value.
+
+#### **`MoleculesPath`** (surface)
+
+```text
+MoleculesPath = dict of string
+```
+
+XYZ files (`.xyz`) of the functional groups and molecules in `FormulaUnit`; the
+first atom is the one placed on the adsorption site.
+
+For example, `FormulaUnit = ["(H)2{OH}1"]` needs `MoleculesPath = {"OH" = "./OH.xyz"}`.
+
+Default: {}
+
+#### **`MolRotate`**
+
+```text
+MolRotate = bool
+```
+
+| MolRotate | Method                                                                                   |
+|:----------|:-----------------------------------------------------------------------------------------|
+| `True`    | Each molecule gets a random rotation about its first atom, kept on the vacuum side and checked against `DistanceOfIon`. |
+| `False`   | Molecules keep the orientation of the XYZ file.                                          |
+
+Independent of `AdsorptionSymmetry` and `RotateAtomPosition`; used in random
+generation and PSO.
 
 Default: False
 
 #### **`TranslateAtomPosition`**
 
-Apply a random translation on the symmetric sites to generate the adsorption sites or not.
-
-Take no effect if `AdsorptionSymmetry=False`.
-
 ```text
 TranslateAtomPosition = bool
 ```
+
+Apply a random in-plane translation to the symmetric adsorption sites. Only used with
+`AdsorptionSymmetry = True`.
 
 Default: True
 
 #### **`RotateAtomPosition`**
 
-Whether to rotate the adatom sites about the Z-axis by a random angle and the molecule/functional group about its first atom by a random angle.
-
-Take no effect if `AdsorptionSymmetry=False`.
-
 ```text
 RotateAtomPosition = bool
 ```
 
+Rotate the symmetric adsorption sites about the z axis by a random angle. Only the
+sites are rotated; the orientation of molecules is controlled by `MolRotate`. Only
+used with `AdsorptionSymmetry = True`.
+
 Default: True
 
 #### Extra Parameters for interface structure prediction
+
+Interface prediction (`IType = 6`) generates the interface region between two slabs.
 
 #### **`Substrate1Path`**
 
@@ -921,16 +956,10 @@ Default: True
 Substrate1Path = string
 ```
 
-The file path for the first substrate slab file.
+Path of the first slab (VASP format, `.vasp`). Atoms fixed by `Selective Dynamics`
+stay fixed during optimization.
 
-The `selective dynamics` feature is supported: atoms with fixed coordinates in the POSCAR
-will be treated as frozen during the interface search.
-
-:::{warning}
-Only the VASP format is accepted, with `.vasp` suffix.
-:::
-
-There is no default value. You must supply this parameter for interface prediction.
+There is no default value.
 
 #### **`Substrate2Path`**
 
@@ -938,25 +967,18 @@ There is no default value. You must supply this parameter for interface predicti
 Substrate2Path = string
 ```
 
-The file path for the second substrate slab file.
+Path of the second slab, same format as `Substrate1Path`.
 
-Same format requirements as `Substrate1Path`.
-
-There is no default value. You must supply this parameter for interface prediction.
+There is no default value.
 
 #### **`InterfaceThickness`**
 
 ```text
-InterfaceThickness = float
-InterfaceThickness = [float, float]
+InterfaceThickness = float or [float, float]
 ```
 
-Specifies the thickness of the interface region (in unit of angstrom) in which the
-interface atoms are placed.
-
-When a single value is provided, it is used as both the minimum and maximum thickness.
-When a two-element list is provided, it specifies `[min_thickness, max_thickness]`,
-and the actual thickness is optimized as a PSO variable.
+Thickness (angstrom) of the interface region. A single value fixes it; `[min, max]`
+lets PSO optimize it within the range.
 
 Default: [3.0, 3.0]
 
@@ -966,11 +988,7 @@ Default: [3.0, 3.0]
 ForbiThickness = float
 ```
 
-Specifies the stand-off distance (in unit of angstrom) applied symmetrically on both
-sides of the interface region: between the topmost atomic layer of the lower substrate
-and the bottom boundary of the generation region, and equivalently between the bottom
-atomic layer of the upper substrate and the top boundary of the generation region.
-Interface atoms are forbidden from being placed within this margin.
+Gap (angstrom) kept free of interface atoms next to each slab surface.
 
 Default: 0.0
 
@@ -980,12 +998,8 @@ Default: 0.0
 InternalThickness = float
 ```
 
-Specifies the depth (in unit of angstrom) by which the generation region extends into
-each substrate, applied symmetrically on both sides: the bottom of the generation region
-penetrates downward into the lower substrate by this amount, and the top of the generation
-region penetrates upward into the upper substrate by the same amount. This parameter acts
-in the opposite sense to `ForbiThickness`: rather than excluding atoms near the substrate
-surface, it allows atoms to be placed partially within the substrate layers.
+Depth (angstrom) by which the interface region extends into each slab; the opposite
+of `ForbiThickness`.
 
 Default: 0.0
 
@@ -995,13 +1009,11 @@ Default: 0.0
 RandScheme = integer
 ```
 
-Determines which structure generation method should be used for the interface atoms.
-
-| RandScheme | Method                                              |
-|:----------:|:----------------------------------------------------|
-|     0      | Random generation of structures                     |
-|     1      | Structure generation with 2D symmetry constraints   |
-|     2      | Structure generation with bonding constraints (requires `CoordinateNumber`) |
+| RandScheme | Method                                                              |
+|:----------:|:--------------------------------------------------------------------|
+|     0      | Random generation                                                   |
+|     1      | Generation with 2D symmetry                                         |
+|     2      | Generation with bonding constraints (requires `CoordinateNumber`)   |
 
 Default: 1
 
@@ -1011,13 +1023,11 @@ Default: 1
 TwinInterface = integer
 ```
 
-Selects the interface structural model.
-
-| TwinInterface | Model                                                        |
-|:-------------:|:-------------------------------------------------------------|
-|       0       | Single-slab model                                            |
-|       1       | Inversion-symmetric model with two equivalent interfaces     |
-|       2       | Mirror-symmetric model with two equivalent interfaces        |
+| TwinInterface | Model                                                     |
+|:-------------:|:----------------------------------------------------------|
+|       0       | Single interface (slab model)                             |
+|       1       | Two equivalent interfaces related by inversion            |
+|       2       | Two equivalent interfaces related by a mirror             |
 
 Default: 0
 
@@ -1027,17 +1037,16 @@ Default: 0
 InterfaceTranslation = string
 ```
 
-Enables rigid-body translation between the two bulk phases and specifies the
-translation direction(s).
+Rigid in-plane translation between the two slabs.
 
-| Value  | Meaning                                          |
-|:------:|:-------------------------------------------------|
-| `""`   | No rigid-body translation                        |
-| `"a"`  | Translation along the *a* lattice vector         |
-| `"b"`  | Translation along the *b* lattice vector         |
-| `"ab"` | Translation on the lateral (*a*–*b*) plane       |
+| Value  | Meaning                         |
+|:------:|:--------------------------------|
+| `""`   | No translation                  |
+| `"a"`  | Along *a*                       |
+| `"b"`  | Along *b*                       |
+| `"ab"` | In the *ab* plane               |
 
-Default: `""` (disabled)
+Default: `""`
 
 #### **`TranslationLimitA`**
 
@@ -1045,10 +1054,12 @@ Default: `""` (disabled)
 TranslationLimitA = [float, float]
 ```
 
-Specifies the range `[min, max]` (in unit of angstrom) of the rigid-body translation
-along the *a* direction. Only takes effect when `InterfaceTranslation` contains `"a"` and `"ab"`.
+Range `[min, max]` (angstrom) of the translation along *a*, used when
+`InterfaceTranslation` is `"a"` or `"ab"`. If neither `TranslationLimitA` nor
+`TranslationLimitB` is given, the translation spans the whole lattice vector; if
+only one is given, the other defaults to `[0.0, 1.5]`.
 
-Default: [0.0, 1.5]
+Default: whole *a* length
 
 #### **`TranslationLimitB`**
 
@@ -1056,10 +1067,10 @@ Default: [0.0, 1.5]
 TranslationLimitB = [float, float]
 ```
 
-Specifies the range `[min, max]` (in unit of angstrom) of the rigid-body translation
-along the *b* direction. Only takes effect when `InterfaceTranslation` contains `"b"` and `"ab"`.
+Range `[min, max]` (angstrom) of the translation along *b*, used when
+`InterfaceTranslation` is `"b"` or `"ab"`. Same defaults as `TranslationLimitA`.
 
-Default: [0.0, 1.5]
+Default: whole *b* length
 
 #### **`CoordinateNumber`**
 
@@ -1067,22 +1078,16 @@ Default: [0.0, 1.5]
 CoordinateNumber = list of list
 ```
 
-Defines bonding constraints for interface structure generation. Only required when
-`RandScheme = 2`.
+Bonding constraints, required for `RandScheme = 2`. Each entry is
+`[center, neighbor, growth CN, bonding CN, d_min, d_max]`:
 
-Each entry is a 6-element list:
-`[central element, neighbor element, maximum growth coordination number, maximum bonding coordination number, minimum distance, maximum distance]`
-
-| Field                       | Type    | Description                                                        |
-|:----------------------------|:--------|:-------------------------------------------------------------------|
-| Central element             | string  | Element symbol of the central atom                                 |
-| Neighbor element            | string  | Element symbol of the neighboring atom                             |
-| Maximum growth coordination number  | integer | Upper limit on the coordination number used during structure growth; 0 means no such neighboring atoms are considered  |
-| Maximum bonding coordination number | integer | Upper limit on the coordination number used for bond formation; 0 means no such neighboring atoms are considered       |
-| Minimum distance            | float   | Inner radius of the nearest-neighbor shell (angstrom)              |
-| Maximum distance            | float   | Outer radius of the nearest-neighbor shell (angstrom)              |
-
-For example:
+| Field        | Description                                                                 |
+|:-------------|:----------------------------------------------------------------------------|
+| center       | Element of the central atom                                                 |
+| neighbor     | Element of the neighboring atom                                             |
+| growth CN    | Maximal coordination number used while growing; 0 means not considered      |
+| bonding CN   | Maximal coordination number used for bonding; 0 means not considered        |
+| d_min, d_max | Inner and outer radius (angstrom) of the neighbor shell                     |
 
 ```toml
 CoordinateNumber = [['Ti', 'Ti', 0, 0, 2.5, 2.5],
@@ -1091,7 +1096,18 @@ CoordinateNumber = [['Ti', 'Ti', 0, 0, 2.5, 2.5],
                     ['O',  'Ti', 3, 0, 1.8, 2.5]]
 ```
 
-There is no default value. You must supply this parameter when `RandScheme = 2`.
+There is no default value.
+
+#### **`LimitGrowth`**
+
+```text
+LimitGrowth = bool
+```
+
+With `RandScheme = 2`, grow new interface atoms preferentially from the slab atoms
+(falls back to normal growth after 100 failed tries).
+
+Default: False
 
 ### Parameters for optimization in `CALYPSO.OPT` block
 

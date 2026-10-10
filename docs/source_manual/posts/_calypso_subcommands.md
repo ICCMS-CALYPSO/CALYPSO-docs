@@ -9,7 +9,8 @@ calypso.x <subcommand> [options]
 
 This page documents the available subcommands. More subcommands will be added
 over time; for now it covers the **cleave** (surface slab), **mismatch**
-(lattice-matched interface search) and **combine** (slab stacking) modules.
+(lattice-matched interface search), **combine** (slab stacking) and
+**supercell** (cell expansion) modules.
 
 ---
 
@@ -465,3 +466,39 @@ the two slabs have already been oriented exactly as desired.
 | `FileNotFoundError` | `--input` given but the TOML file does not exist. |
 | `ValueError` | Direct mode without both `--filepath1` and `--filepath2`. |
 | `KeyError` | TOML missing `[STRUCTURE1]` / `[STRUCTURE2]`, or either missing `FilePath`. |
+
+---
+
+## supercell — expand a cell into a supercell
+
+Build a supercell from a structure file
+(plugin: `calypso/plugins/cli_supercell.py`, backed by
+`calypso.utils.supercell.SupercellExpanderIO`). `Selective Dynamics` flags are
+copied to every image.
+
+### Usage
+
+```bash
+# 2D: expand a and b, keep c
+calypso.x supercell -p POSCAR.vasp -m 2 2 -s POSCAR_super.vasp
+
+# 3D: expand a, b and c
+calypso.x supercell -p POSCAR.vasp -m 2 2 2 -s POSCAR_super.vasp
+
+# full 3x3 matrix (row-major)
+calypso.x supercell -p POSCAR.vasp -m 2 1 0 -1 2 0 0 0 1
+```
+
+### Parameters
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--pcfilename`, `-p` | path | `POSCAR.vasp` | Input structure file. |
+| `--matrix`, `-m` | 2, 3 or 9 ints | `1 1 1` | Expansion: `a b` (c kept), `a b c`, or a full 3x3 matrix `m11 m12 m13 m21 m22 m23 m31 m32 m33`. |
+| `--scfilename`, `-s` | path | `POSCAR_super.vasp` | Output supercell file. |
+| `--scformat`, `-f` | str | `vasp` | Output file format. |
+
+### Output files
+
+- **Supercell structure** — `--scfilename` (default `POSCAR_super.vasp`), in the
+  format given by `--scformat`.
