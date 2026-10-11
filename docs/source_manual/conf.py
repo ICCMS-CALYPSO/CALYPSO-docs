@@ -29,7 +29,7 @@ extensions = [
 
 exclude_patterns = ['development']
 
-myst_heading_anchors = 4
+myst_heading_anchors = 5
 myst_enable_extensions = [
     "amsmath",
     "dollarmath",
