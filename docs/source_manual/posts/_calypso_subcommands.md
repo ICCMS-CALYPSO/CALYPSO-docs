@@ -292,68 +292,21 @@ These raise an exception and abort the `cleave` run; no slab is written.
 
 ### cleave: How H passivation works (`CapBondsWithH`)
 
-When `CapBondsWithH` is enabled, dangling bonds on the **bottom** side of the
-slab are saturated with hydrogen by the Fortran routine `capbond_with_h`. The
-algorithm uses covalent radii (one value per element, passed in from the Python
-side; the pairwise sums are formed in Fortran):
+Cutting a slab out of a bulk crystal breaks the bonds between the bottom surface
+and the atoms below it. With `CapBondsWithH = true` these dangling bonds are
+saturated with hydrogen, so the bottom surface behaves like the bulk interior and
+only the top surface is a real surface.
 
-1. **Find the broken bonds.** For every surface atom *i* in the slab and every
-   atom *j* that was cut away just below it (including its periodic images in
-   the *a*/*b* directions, `-1..1`), the pair is considered bonded when their
-   distance is below a cutoff scaled from the covalent radii:
-
-   ```
-   max_bond_len = 1.2 * (cov_radii[i] + cov_radii[j])
-   ```
-
-   The factor `max_ratio = 1.2` (20 % tolerance) is the bonding criterion. Each
-   such broken *i–j* bond becomes one passivating H atom, so the count of added
-   H atoms is determined here first.
-
-2. **Place each H atom.** The H replacing the removed neighbour *j* is put on
-   the *i→j* direction, but at a shortened, element-dependent **X–H bond
-   length**:
-
-   ```
-   h_bond_len = 0.8 * (cov_radii[i] + cov_radii[H])
-   ```
-
-   i.e. 0.8 × the sum of the surface atom's and hydrogen's covalent radii.
-   The H is moved along the original bond direction to this distance from
-   atom *i* (`move_along`).
-
-3. **Pseudo-hydrogen charge.** To keep the slab charge-neutral, each cap is
-   assigned a fractional ("pseudo-hydrogen") charge derived from the broken
-   bond:
-
-   ```
-   charge = 2.0 - decomposed_charge(ele_i, ele_j)
-   ```
-
-   The cap's element label is chosen from this charge:
-
-   | charge | label |
-   |--------|-------|
-   | 0.25 | `H.25` |
-   | 0.5  | `H.5`  |
-   | 0.75 | `H.75` |
-   | 1.0  | `H` (ordinary hydrogen) |
-   | 1.25 | `H1.25` |
-   | 1.5  | `H1.5` |
-   | other | `H_s` (generic pseudo-H) |
-
-   So a plain `H` label means a charge-1.0 (normal covalent) cap, whereas
-   labels such as `H.5` / `H1.25` are pseudo-hydrogens carrying the indicated
-   partial charge.
-
-4. **Bookkeeping.** The capped atoms are tagged in `subpos_type` as type `3`
-   (relaxed surface = `1`, bulk = `2`, pseudo-H = `3`); in the output slab the
-   bulk and pseudo-H atoms are fixed (selective dynamics), the top relaxed
-   layers are free.
-
-The number of H atoms added is printed at run time
-(`Number of passivation H atoms: …`). Note the warning above: if the layer
-count had to be reduced, passivation may be unreliable for that slab.
+1. **Broken bonds.** A bottom-surface atom and an atom removed by the cut are
+   considered bonded when their distance is close to the sum of their covalent
+   radii. Every such broken bond receives one hydrogen atom.
+2. **Position.** The hydrogen sits on the line of the broken bond, at the
+   shorter bond length typical of a bond to hydrogen.
+3. **Pseudo-hydrogen.** To keep the slab charge-neutral, each hydrogen carries
+   the fractional valence that the removed neighbour contributed to the bond.
+   A normal covalent bond gives an ordinary `H`; polar bonds give
+   pseudo-hydrogens such as `H.25`, `H.5`, `H.75`, `H1.25` or `H1.5`, whose label
+   is their valence.
 
 ### cleave: Examples
 
@@ -746,9 +699,22 @@ calypso.x mismatch -f1 lat1.cif -f2 lat2.cif \
     --filesymmetry1 --filesymmetry2 \
     --maxmiller 5 --maxarea 200 --maxmismatch 0.05 -o ./interface
 
+# 2D materials: fix the layer plane to (0 0 1), i.e. match along the
+# in-plane lattice and stack along z
+calypso.x mismatch -f1 MoS2.vasp -f2 Mo2CO2.vasp \
+    --SpecifyingMillerIndex1 0 0 1 --SpecifyingMillerIndex2 0 0 1 \
+    --maxarea 100 --maxmismatch 0.10 -o ./interface
+
 # Mode 2: TOML file
 calypso.x mismatch --input mismatch.toml
 ```
+
+For 2D materials (monolayers or few layers with vacuum along c), set the Miller
+index of both crystals to `0 0 1`: the layer plane is the *ab* plane, so only the
+in-plane lattices are matched and the two layers are stacked along z. In TOML
+this is `SpecifyingMillerIndex = [[0, 0, 1]]` in `[CRYSTAL1]` and `[CRYSTAL2]`;
+see the [MXene_MoS2](#mxene_mos2-mos2--mo2co2-monolayers-command-line-mode)
+example.
 
 ### mismatch: Parameters
 
@@ -778,7 +744,7 @@ names are case-insensitive. Stacking keys may be written in `[MATCHING]` or
 | `--capbondswithh1` / `--capbondswithh2` | `CapBondsWithH` | bool | `false` | Passivate dangling bonds with pseudo-H. This is opt-in; enable only for systems where pseudo-H passivation is appropriate. |
 | `--vacuumthick1` / `--vacuumthick2` | `VacuumThick` | float | `15.0` | Vacuum thickness for the individual slabs (Angstrom). |
 | `--slabdepth1` / `--slabdepth2` | `SlabDepth` | float | `0.0` | Slab depth from the top surface (Angstrom). |
-| `--SpecifyingMillerIndex1` / `--SpecifyingMillerIndex2` | `SpecifyingMillerIndex` | list | auto | Fix Miller indices instead of searching. CLI uses flat triplets, e.g. `1 0 0 0 0 1`; TOML uses list of triplets, e.g. `[[1, 1, 0], [1, 0, 0]]`. |
+| `--SpecifyingMillerIndex1` / `--SpecifyingMillerIndex2` | `SpecifyingMillerIndex` | list | auto | Fix Miller indices instead of searching. CLI uses flat triplets, e.g. `1 0 0 0 0 1`; TOML uses list of triplets, e.g. `[[1, 1, 0], [1, 0, 0]]`. Use `0 0 1` for 2D materials (layer in the *ab* plane, stacking along z). |
 
 **Search parameters** (`[MATCHING]`)
 
