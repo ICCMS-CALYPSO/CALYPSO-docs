@@ -1,19 +1,115 @@
 # calypso.x subcommands
 
-`calypso.x` exposes a set of utility subcommands, each implemented as a
-plugin under `calypso/plugins/` (`cli_*.py`). Every subcommand is invoked as:
-
-```bash
-calypso.x <subcommand> [options]
-```
-
-This page documents the available subcommands. More subcommands will be added
-over time; for now it covers the **cleave** (surface slab), **mismatch**
-(lattice-matched interface search), **combine** (slab stacking) and
-**supercell** (cell expansion) modules.
+- [supercell — expand a cell into a supercell](#supercell)
+  - [Usage](#supercell-usage)
+  - [Parameters](#supercell-parameters)
+  - [Output files](#supercell-output-files)
+  - [Examples](#supercell-examples)
+- [cleave — generate a surface slab](#cleave)
+  - [Usage](#cleave-usage)
+  - [Parameters](#cleave-parameters)
+  - [Input files](#cleave-input-files)
+  - [Output files](#cleave-output-files)
+  - [Warnings (non-fatal)](#cleave-warnings)
+  - [Errors (fatal — program stops)](#cleave-errors)
+  - [How H passivation works (`CapBondsWithH`)](#cleave-how-h-passivation-works)
+  - [Examples](#cleave-examples)
+- [mismatch — search lattice-matched interfaces](#mismatch)
+  - [Usage](#mismatch-usage)
+  - [Parameters](#mismatch-parameters)
+  - [TOML input](#mismatch-toml-input)
+  - [Output files](#mismatch-output-files)
+  - [Notes on `FlipSlab1Z`](#mismatch-notes-on-flipslab1z)
+  - [Errors (fatal — program stops)](#mismatch-errors)
+  - [Examples](#mismatch-examples)
+- [combine — stack two slabs into a heterostructure](#combine)
+  - [Usage](#combine-usage)
+  - [Parameters](#combine-parameters)
+  - [TOML input](#combine-toml-input)
+  - [Output files](#combine-output-files)
+  - [Notes on `FlipSlab1Z`](#combine-notes-on-flipslab1z)
+  - [Errors (fatal — program stops)](#combine-errors)
+  - [Examples](#combine-examples)
 
 ---
 
+(supercell)=
+## supercell — expand a cell into a supercell
+
+Build a supercell from a structure file
+(plugin: `calypso/plugins/cli_supercell.py`, backed by
+`calypso.utils.supercell.SupercellExpanderIO`). `Selective Dynamics` flags are
+copied to every image.
+
+(supercell-usage)=
+### Usage
+
+```bash
+# 2D: expand a and b, keep c
+calypso.x supercell -p POSCAR.vasp -m 2 2 -s POSCAR_super.vasp
+
+# 3D: expand a, b and c
+calypso.x supercell -p POSCAR.vasp -m 2 2 2 -s POSCAR_super.vasp
+
+# full 3x3 matrix (row-major)
+calypso.x supercell -p POSCAR.vasp -m 2 1 0 -1 2 0 0 0 1
+```
+
+(supercell-parameters)=
+### Parameters
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--pcfilename`, `-p` | path | `POSCAR.vasp` | Input structure file. |
+| `--matrix`, `-m` | 2, 3 or 9 ints | `1 1 1` | Expansion: `a b` (c kept), `a b c`, or a full 3x3 matrix `m11 m12 m13 m21 m22 m23 m31 m32 m33`. |
+| `--scfilename`, `-s` | path | `POSCAR_super.vasp` | Output supercell file. |
+| `--scformat`, `-f` | str | `vasp` | Output file format. |
+
+(supercell-output-files)=
+### Output files
+
+- **Supercell structure** — `--scfilename` (default `POSCAR_super.vasp`), in the
+  format given by `--scformat`.
+
+(supercell-examples)=
+### Examples
+
+Input and output files are in `example/cli_supercell/` of CALYPSO-Python.
+
+**graphene** — 2x2 in-plane supercell of graphene (`-m 2 2` keeps c).
+
+`input_file/run_cli.sh`:
+
+```bash
+#! /bin/bash
+
+calypso.x supercell \
+    -p POSCAR.vasp \
+    -m 2 2 \
+    -s POSCAR_super.vasp
+```
+
+Output: `output_file/POSCAR_super.vasp` (C8).
+
+**H2O** — 2x2x2 supercell; the `Selective Dynamics` flags of the input are kept.
+
+`input_file/run_cli.sh`:
+
+```bash
+#! /bin/bash
+
+calypso.x supercell \
+    -p POSCAR.vasp \
+    -m 2 2 2 \
+    -s POSCAR_super.vasp
+```
+
+Output: `output_file/POSCAR_super.vasp` (H16O8).
+
+
+---
+
+(cleave)=
 ## cleave — generate a surface slab
 
 Generate a surface slab from a bulk crystal structure
@@ -26,6 +122,7 @@ Two input modes are supported:
 2. **TOML file** — write parameters into a TOML file and pass `--input`.
    When `--input` is supplied, all other flags are ignored.
 
+(cleave-usage)=
 ### Usage
 
 ```bash
@@ -39,6 +136,7 @@ calypso.x cleave --spacegroup 227 \
 calypso.x cleave --input input.toml
 ```
 
+(cleave-parameters)=
 ### Parameters
 
 | Flag | TOML key | Type | Default | Description |
@@ -63,6 +161,7 @@ calypso.x cleave --input input.toml
 | `--cleavefilepath`, `-o` | `CleaveFilePath` | path | auto | Output slab file. Default: `POSCAR_{millerindex}_slab.vasp`. |
 | `--cleavefileformat` | `CleaveFileFormat` | str | `vasp` | Output file format (e.g. `vasp`, `extxyz`). |
 
+(cleave-input-files)=
 ### Input files
 
 - **Direct mode** (`--usefile` not set): no input file; the structure is built
@@ -89,6 +188,7 @@ calypso.x cleave --input input.toml
   CleaveFileFormat  = "vasp"
   ```
 
+(cleave-output-files)=
 ### Output files
 
 Running `cleave` writes three files (the slab next to where you point
@@ -100,6 +200,7 @@ Running `cleave` writes three files (the slab next to where you point
 - **`wb-surfgin.toml`** — a summary of every parameter used for the run,
   reusable directly as `--input`.
 
+(cleave-warnings)=
 ### Warnings (non-fatal)
 
 These are emitted via Python `warnings.warn` (`UserWarning`). They print a
@@ -111,6 +212,7 @@ message but the run continues and a slab is still produced.
 | Supercell ran out of atoms before reaching `NumLayers` | *Requested too many layers; reduced to N layers (ran out of atoms in the supercell).* | The slab is built with the achievable number of layers `N` (see `num_layers_out`) instead of the requested `NumLayers`. Increase `SlabTotalThick`, or request fewer layers, to avoid it. |
 | The above happened **and** `CapBondsWithH` is set | *Cannot passivate dangling bonds with H when the layer count was reduced.* | A second warning, alerting that passivation may be unreliable for the reduced slab. |
 
+(cleave-errors)=
 ### Errors (fatal — program stops)
 
 These raise an exception and abort the `cleave` run; no slab is written.
@@ -123,6 +225,7 @@ These raise an exception and abort the `cleave` run; no slab is written.
 | `ValueError` | Direct mode (`--usefile` not set) with missing/invalid inputs | Reported for any of: `SpaceGroup` not in 1–230, `LatticeParameters` missing, `IrreducibleAtoms` missing. |
 | `ValueError` | `LatticeParameters` cannot form a valid cell | *Invalid LatticeParameters …: could not build lattice matrix.* |
 
+(cleave-how-h-passivation-works)=
 ### How H passivation works (`CapBondsWithH`)
 
 When `CapBondsWithH` is enabled, dangling bonds on the **bottom** side of the
@@ -188,8 +291,80 @@ The number of H atoms added is printed at run time
 (`Number of passivation H atoms: …`). Note the warning above: if the layer
 count had to be reduced, passivation may be unreliable for that slab.
 
+(cleave-examples)=
+### Examples
+
+Input and output files are in `example/cli_cleave_surface/` of CALYPSO-Python.
+
+**diamond_111** — C(111) slab from a CIF file with symmetry, H-capped bottom
+surface (TOML mode).
+
+`input_file/run_cli.sh`:
+
+```bash
+#! /bin/bash
+
+calypso.x cleave --input input.toml
+```
+
+`input_file/input.toml`:
+
+```toml
+# Test 1: Diamond C(111) surface
+# space_group=227 (Fd-3m), a=3.5668 Å
+# miller=(1,1,1), recon_mat=[[2,0],[0,1]], cap_bonds_with_h=True
+
+MillerIndex       = [1, 1, 1]
+MatrixNatation    = [[1, 0], [0, 1]]
+
+VacuumThick       = 20.0
+SlabDepth         = 0.0
+SlabTotalThick    = 100.0
+NumLayers         = 6
+NumRelaxedLayers  = 2
+SlabTolerance     = 0.5
+CapBondsWithH     = true
+
+UseFile           = true
+FilePath          = "diamond.cif"
+FileSymmetry      = true
+SymPrec           = 1e-5
+CleaveFilePath    = "POSCAR_111_slab.vasp"
+CleaveFileFormat  = "vasp"
+```
+
+Output: `POSCAR_111_slab.vasp`, `uv.csv`, `wb-surfgin.toml`.
+
+**TiO2_m5m20** — (-5 -2 0) slab of TiO2 read from a POSCAR (command-line mode).
+
+`input_file/run_cli.sh`:
+
+```bash
+#!/bin/bash
+# Test 2: TiO2 rutile(-5-20) surface
+# space_group=141 (I4_1/amd), a=b=3.9033 Å, c=9.6996 Å
+# 2 irreducible atoms: Ti(-0.5, 0.5, 1.0), O(-0.5, 0.5, 1.20785)
+# miller=(-5,-2,0), recon_mat=[[1,0],[0,1]], cap_bonds_with_h=False
+
+calypso.x cleave \
+    --millerindex -5 -2 0 \
+    --matrixnotation 1 0 0 1 \
+    --vacuumthick 15.0 \
+    --slabtotalthick 100.0 \
+    --numlayers 5 \
+    --numrelaxedlayers 5 \
+    --slabtolerance 0.5 \
+    --usefile \
+    --filepath ./TiO2.vasp \
+    --cleavefileformat vasp
+```
+
+Output: `POSCAR_m5m20_slab.vasp`, `uv.csv`, `wb-surfgin.toml`.
+
+
 ---
 
+(mismatch)=
 ## mismatch — search lattice-matched interfaces
 
 Search lattice-matched supercell interfaces between two crystals via the
@@ -207,6 +382,7 @@ The input TOML file is user-controlled. If you run with command-line flags,
 CALYPSO does **not** create `mismatch.toml`. In both modes, CALYPSO writes a
 separate full parameter summary named `wb-mismatch.toml` under `OutputDir`.
 
+(mismatch-usage)=
 ### Usage
 
 ```bash
@@ -219,6 +395,7 @@ calypso.x mismatch -f1 lat1.cif -f2 lat2.cif \
 calypso.x mismatch --input mismatch.toml
 ```
 
+(mismatch-parameters)=
 ### Parameters
 
 The TOML file has `[CRYSTAL1]` for the upper crystal, `[CRYSTAL2]` for the
@@ -275,7 +452,8 @@ names are case-insensitive. Stacking keys may be written in `[MATCHING]` or
 | `--flip-slab1-z` / `--no-flip-slab1-z` | `FlipSlab1Z` | bool | `true` | Mirror the upper slab (`slab1`) along z before stacking, so its outer surface can face the vacuum and the opposite side faces the interface. |
 | `--pairformat` | `PairFormat` | str | `vasp` | Output structure format for pair directories. |
 
-### TOML example
+(mismatch-toml-input)=
+### TOML input
 
 ```toml
 [CRYSTAL1]
@@ -325,6 +503,7 @@ Typ        = 1
 FlipSlab1Z = true
 ```
 
+(mismatch-output-files)=
 ### Output files
 
 Written under `OutputDir`:
@@ -344,6 +523,7 @@ Path fields written to `wb-mismatch.toml` are absolute paths, including
 only present if the user supplied one) from CALYPSO's generated summary file
 (`wb-mismatch.toml`).
 
+(mismatch-notes-on-flipslab1z)=
 ### Notes on `FlipSlab1Z`
 
 `slab2` is placed below and `slab1` above. With `FlipSlab1Z=true` (the default),
@@ -352,6 +532,7 @@ when the upper slab should be turned over so its interface side faces downward
 and its outer/passivated side faces the vacuum. Set `FlipSlab1Z=false` to stack
 `slab1` without this z inversion.
 
+(mismatch-errors)=
 ### Errors (fatal — program stops)
 
 | Exception | When |
@@ -361,8 +542,204 @@ and its outer/passivated side faces the vacuum. Set `FlipSlab1Z=false` to stack
 | `ValueError` | A `--SpecifyingMillerIndex*` list whose length is not a multiple of 3. |
 | `KeyError` | TOML missing `[CRYSTAL1]` / `[CRYSTAL2]`, or either missing `FilePath`. |
 
+(mismatch-examples)=
+### Examples
+
+Input and output files are in `example/cli_mismatch/` of CALYPSO-Python. Every
+example writes `matched_lattices.csv`, `wb-mismatch.toml` and
+`matched_supercells/pair_N/` (`lat1_supercell.vasp`, `lat2_supercell.vasp`,
+`combined_interface.vasp`) for the three best matches.
+
+**rutile_anatase** — rutile / anatase TiO2 from CIF files (TOML mode).
+
+`input_file/run_cli.sh`:
+
+```bash
+#! /bin/bash
+
+calypso.x mismatch --input mismatch.toml
+```
+
+`input_file/mismatch.toml`:
+
+```toml
+# Example: rutile TiO2 / anatase TiO2 lattice matching (TOML mode)
+# Reference params from example_rutile_anatase/input_mismatch.dat:
+#   MaximumArea = 200.0, MaximumMismatchValue = 0.05, MaximumMillerIndex = 5
+#
+# Section / key names are case-insensitive. Bulk crystals: keep symmetry
+# reduction on (UseSymmetry = true, the default).
+
+[CRYSTAL1]
+FilePath         = "rutile.cif"   # rutile TiO2 (SG 136)
+FileSymmetry     = true
+SymPrec          = 1e-5
+UseSymmetry      = true
+NumLayers        = 8
+NumRelaxedLayers = 2
+SlabTolerance    = 0.5
+CapBondsWithH    = false
+VacuumThick      = 15.0
+SlabDepth        = 0.0
+
+[CRYSTAL2]
+FilePath         = "anatase.cif"  # anatase TiO2 (SG 141)
+FileSymmetry     = true
+SymPrec          = 1e-5
+UseSymmetry      = true
+NumLayers        = 8
+NumRelaxedLayers = 2
+SlabTolerance    = 0.5
+CapBondsWithH    = false
+VacuumThick      = 15.0
+SlabDepth        = 0.0
+
+[MATCHING]
+MaxMiller     = 5
+MaxArea       = 200.0
+MaxMismatch   = 0.05
+MaxResults    = 3
+SlabThick     = 30.0
+OutputDir     = "."
+WritePairs    = true
+WriteCombined = true
+PairFormat    = "vasp"
+
+# Stacking parameters for the combined interface of each pair.
+# Optional: omit to keep the mismatch defaults.
+[COMBINE]
+DeltaZ = 2.5
+Vacuum = 15.0
+DeltaX = 0.0
+DeltaY = 0.0
+Typ    = 1
+FlipSlab1Z = true
+```
+
+**Ni_BN** — h-BN monolayer on bulk Ni with fixed Miller indices (TOML mode).
+
+`input_file/run_cli.sh`:
+
+```bash
+#! /bin/bash
+
+calypso.x mismatch --input mismatch.toml
+```
+
+`input_file/mismatch.toml`:
+
+```toml
+# Example: BN monolayer / Ni bulk interface (TOML mode)
+#
+# Crystal 1 (BN) is a monolayer; crystal 2 (Ni) is a bulk FCC conventional
+# cell (4 atoms, space group 225). Both crystals go through normal symmetry
+# detection (UseSymmetry = true, the default) and are cleaved internally via
+# NumLayers/SpecifyingMillerIndex. Inputs are VASP POSCARs (no symmetry
+# records).
+#
+# Section / key names are case-insensitive.
+
+[CRYSTAL1]
+FilePath              = "BN.vasp"   # monolayer h-BN
+FileSymmetry          = false
+SymPrec               = 1e-5
+UseSymmetry           = true
+NumLayers             = 1
+NumRelaxedLayers      = 1
+SlabTolerance         = 0.5
+CapBondsWithH         = false
+VacuumThick           = 15.0
+SlabDepth             = 0.0
+SpecifyingMillerIndex = [[0, 0, 1]]
+
+[CRYSTAL2]
+FilePath              = "Ni.vasp"   # Ni bulk conventional cell (FCC, SG 225)
+FileSymmetry          = false
+SymPrec               = 1e-5
+UseSymmetry           = true
+NumLayers             = 4
+NumRelaxedLayers      = 2
+SlabTolerance         = 0.5
+CapBondsWithH         = false
+VacuumThick           = 15.0
+SlabDepth             = 0.0
+SpecifyingMillerIndex = [[1, 1, 0], [1, 0, 0]]
+
+[MATCHING]
+MaxMiller     = 5
+MaxArea       = 100.0
+MaxMismatch   = 0.10
+MaxResults    = 3
+SlabThick     = 30.0
+OutputDir     = "."
+WritePairs    = true
+WriteCombined = true
+PairFormat    = "vasp"
+
+# Stacking parameters for the combined interface of each pair.
+[COMBINE]
+DeltaZ = 3.0
+Vacuum = 15.0
+DeltaX = 0.0
+DeltaY = 0.0
+Typ    = 1
+```
+
+**LCO_LPS** — LiCoO2 / Li3PS4 from CIF files (command-line mode).
+
+`input_file/run_cli.sh`:
+
+```bash
+#! /bin/bash
+# LiCoO2 (LCO) / Li3PS4 (LPS) lattice matching — command-line mode.
+# Both inputs are CIFs with symmetry records, so --filesymmetry1/2 is set.
+
+calypso.x mismatch \
+    -f1 lat1.cif -f2 lat2.cif \
+    --filesymmetry1 --filesymmetry2 \
+    --symprec1 1e-5 --symprec2 1e-5 \
+    --maxmiller 5 --maxarea 100.0 --maxmismatch 0.10 --maxresults 3 \
+    --slabthick 30.0 \
+    --numlayers1 8 --numlayers2 8 \
+    --numrelaxedlayers1 2 --numrelaxedlayers2 2 \
+    --slabtolerance1 0.5 --slabtolerance2 0.5 \
+    --vacuumthick1 15.0 --vacuumthick2 15.0 \
+    --slabdepth1 0.0 --slabdepth2 0.0 \
+    --outputdir . \
+    --deltaz 2.5 --vacuum 15.0 --typ 1 --pairformat vasp
+```
+
+**MXene_MoS2** — MoS2 / Mo2CO2 monolayers, layer plane fixed to (0 0 1)
+(command-line mode).
+
+`input_file/run_cli.sh`:
+
+```bash
+#! /bin/bash
+# 2-D heterostructure: monolayer MoS2 / Mo2CO2 MXene — command-line mode.
+# Inputs are VASP POSCARs (no symmetry records); space group is auto-detected.
+# For a 2-D stack we fix the layer plane via --SpecifyingMillerIndex1/2 0 0 1
+# instead of using a 2-D flag.
+
+calypso.x mismatch \
+    -f1 MoS2.vasp -f2 Mo2CO2.vasp \
+    --symprec1 1e-5 --symprec2 1e-5 \
+    --SpecifyingMillerIndex1 0 0 1 --SpecifyingMillerIndex2 0 0 1 \
+    --maxmiller 5 --maxarea 100.0 --maxmismatch 0.10 --maxresults 3 \
+    --slabthick 30.0 \
+    --numlayers1 3 --numlayers2 5 \
+    --numrelaxedlayers1 3 --numrelaxedlayers2 5 \
+    --slabtolerance1 0.5 --slabtolerance2 0.5 \
+    --vacuumthick1 15.0 --vacuumthick2 15.0 \
+    --slabdepth1 0.0 --slabdepth2 0.0 \
+    --outputdir . \
+    --deltaz 3.0 --vacuum 15.0 --typ 1 --pairformat vasp
+```
+
+
 ---
 
+(combine)=
 ## combine — stack two slabs into a heterostructure
 
 Stack two already lattice-matched slabs into one heterostructure interface.
@@ -381,6 +758,7 @@ CALYPSO does **not** create `combine.toml`. In both modes, CALYPSO writes a
 separate summary named `wb-combine.toml` next to the output structure unless
 summary writing is disabled by the Python API.
 
+(combine-usage)=
 ### Usage
 
 ```bash
@@ -396,6 +774,7 @@ calypso.x combine -f1 lat1_supercell.vasp -f2 lat2_supercell.vasp \
 calypso.x combine --input combine.toml
 ```
 
+(combine-parameters)=
 ### Parameters
 
 The TOML file has `[STRUCTURE1]` for the upper slab, `[STRUCTURE2]` for the
@@ -419,7 +798,8 @@ names are case-insensitive.
 `WriteSummary` is not written into `wb-combine.toml`. It is only an internal
 Python API switch controlling whether the summary file is generated.
 
-### TOML example
+(combine-toml-input)=
+### TOML input
 
 ```toml
 [STRUCTURE1]
@@ -439,6 +819,7 @@ OutputFile   = "combined_interface.vasp"
 OutputFormat = "vasp"
 ```
 
+(combine-output-files)=
 ### Output files
 
 - **Combined structure** — `OutputFile`, in the format specified by
@@ -453,12 +834,14 @@ summary file intentionally does not include `WriteSummary`.
 Each slab's selective-dynamics mask is carried through into the combined
 structure unchanged.
 
+(combine-notes-on-flipslab1z)=
 ### Notes on `FlipSlab1Z`
 
 With `FlipSlab1Z=true` (default), structure 1 is mirrored in z within its own
 occupied thickness before it is placed above structure 2. Set it to `false` if
 the two slabs have already been oriented exactly as desired.
 
+(combine-errors)=
 ### Errors (fatal — program stops)
 
 | Exception | When |
@@ -467,38 +850,84 @@ the two slabs have already been oriented exactly as desired.
 | `ValueError` | Direct mode without both `--filepath1` and `--filepath2`. |
 | `KeyError` | TOML missing `[STRUCTURE1]` / `[STRUCTURE2]`, or either missing `FilePath`. |
 
----
+(combine-examples)=
+### Examples
 
-## supercell — expand a cell into a supercell
+Input and output files are in `example/cli_combine/` of CALYPSO-Python.
 
-Build a supercell from a structure file
-(plugin: `calypso/plugins/cli_supercell.py`, backed by
-`calypso.utils.supercell.SupercellExpanderIO`). `Selective Dynamics` flags are
-copied to every image.
+**rutile_anatase** — stack a matched rutile / anatase pair from `mismatch`.
 
-### Usage
+`input_file/run_cli.sh`:
 
 ```bash
-# 2D: expand a and b, keep c
-calypso.x supercell -p POSCAR.vasp -m 2 2 -s POSCAR_super.vasp
+#! /bin/bash
 
-# 3D: expand a, b and c
-calypso.x supercell -p POSCAR.vasp -m 2 2 2 -s POSCAR_super.vasp
-
-# full 3x3 matrix (row-major)
-calypso.x supercell -p POSCAR.vasp -m 2 1 0 -1 2 0 0 0 1
+calypso.x combine --input combine.toml
 ```
 
-### Parameters
+`input_file/combine.toml`:
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--pcfilename`, `-p` | path | `POSCAR.vasp` | Input structure file. |
-| `--matrix`, `-m` | 2, 3 or 9 ints | `1 1 1` | Expansion: `a b` (c kept), `a b c`, or a full 3x3 matrix `m11 m12 m13 m21 m22 m23 m31 m32 m33`. |
-| `--scfilename`, `-s` | path | `POSCAR_super.vasp` | Output supercell file. |
-| `--scformat`, `-f` | str | `vasp` | Output file format. |
+```toml
+# Example: combine two lattice-matched slabs into an interface.
+#
+# The two input slabs come from a `mismatch` run on rutile / anatase TiO2
+# (one matched pair's lat1_supercell.vasp / lat2_supercell.vasp). This is the
+# typical combine workflow: first run `mismatch` to find a matched pair, then
+# `combine` to stack the two substrate supercells with the desired gap/vacuum.
+#
+# Section / key names are case-insensitive.
 
-### Output files
+[STRUCTURE1]
+FilePath = "rutile_slab.vasp"    # upper slab (matched rutile supercell)
 
-- **Supercell structure** — `--scfilename` (default `POSCAR_super.vasp`), in the
-  format given by `--scformat`.
+[STRUCTURE2]
+FilePath = "anatase_slab.vasp"   # lower slab (matched anatase supercell)
+
+[COMBINE]
+DeltaZ       = 2.5
+Vacuum       = 15.0
+DeltaX       = 0.0
+DeltaY       = 0.0
+Typ          = 1                 # 1 = slab + vacuum, 2 = crystal
+OutputFile   = "rutile_anatase_interface.vasp"
+OutputFormat = "vasp"
+```
+
+Output: `rutile_anatase_interface.vasp`, `wb-combine.toml`.
+
+**MoS2_MXene** — stack monolayer MoS2 on Mo2CO2.
+
+`input_file/run_cli.sh`:
+
+```bash
+#! /bin/bash
+
+calypso.x combine --input combine.toml
+```
+
+`input_file/combine.toml`:
+
+```toml
+# Example: vertical stacking of monolayer MoS2 on Mo2CO2 MXene
+#
+# Both inputs are single layers (c ~ 30 Å, already with vacuum). combine simply
+# stacks STRUCTURE2 (lower) and STRUCTURE1 (upper) along c, separated by DeltaZ,
+# and centres the stack in the cell. Section / key names are case-insensitive.
+
+[STRUCTURE1]
+FilePath = "MoS2.vasp"     # upper layer
+
+[STRUCTURE2]
+FilePath = "Mo2CO2.vasp"   # lower layer
+
+[COMBINE]
+DeltaZ       = 3.0                       # interlayer gap (Å)
+Vacuum       = 15.0                      # total vacuum (typ=1), split above/below
+DeltaX       = 0.0
+DeltaY       = 0.0
+Typ          = 1                         # 1 = slab + vacuum, 2 = crystal
+OutputFile   = "MoS2_MXene_interface.vasp"
+OutputFormat = "vasp"
+```
+
+Output: `MoS2_MXene_interface.vasp`, `wb-combine.toml`.

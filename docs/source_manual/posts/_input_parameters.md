@@ -50,15 +50,11 @@ Inputs and outputs.
       - [**`MoleculesPath`**](#moleculespath)
       - [Extra Parameters for surface structure prediction](#extra-parameters-for-surface-structure-prediction)
       - [**`SurfaceGenerationMode`**](#surfacegenerationmode)
-      - [**`[CALYPSO.GENERATOR.2D]`**](#calypsogenerator2d)
-      - [**`[CALYPSO.GENERATOR.CLUSTER]`**](#calypsogeneratorcluster)
-      - [**`MaxBondRatio`**](#maxbondratio)
       - [**`FormulaUnit`** (surface)](#formulaunit-surface)
       - [**`DistanceOfIon`** (surface)](#distanceofion-surface)
       - [**`AdsorptionStyle`**](#adsorptionstyle)
       - [**`AdsorptionSymmetry`**](#adsorptionsymmetry)
       - [**`SubstratePath`**](#substratepath)
-      - [**`[CALYPSO.GENERATOR.CLEAVE]`**](#calypsogeneratorcleave)
       - [**`Supercell`**](#supercell)
       - [**`RangeOfZAxis`**](#rangeofzaxis)
       - [**`FixSiteC`**](#fixsitec)
@@ -67,6 +63,9 @@ Inputs and outputs.
       - [**`MolRotate`**](#molrotate)
       - [**`TranslateAtomPosition`**](#translateatomposition)
       - [**`RotateAtomPosition`**](#rotateatomposition)
+      - [**`[CALYPSO.GENERATOR.CLEAVE]`**](#calypsogeneratorcleave)
+      - [**`[CALYPSO.GENERATOR.2D]`**](#calypsogenerator2d)
+      - [**`[CALYPSO.GENERATOR.CLUSTER]`**](#calypsogeneratorcluster)
       - [Extra Parameters for interface structure prediction](#extra-parameters-for-interface-structure-prediction)
       - [**`Substrate1Path`**](#substrate1path)
       - [**`Substrate2Path`**](#substrate2path)
@@ -275,29 +274,12 @@ Define the descriptor of structures, it will be used to determine whether two st
 BCM is faster than CCF, so we suggest to use BCM for most cases.
 if encountering the similarity warning when generating structures, one should decrease the value of `SimThreshold` or turn off the similarity compare by setting `ISim = 0`.
 
-BCM caches the structure's element information and uses vectorized element masks.
-This improves descriptor calculation cost without changing the whole-cell BCM
-definition, matrix ordering, or `SimThreshold`; no new performance switch is needed.
-
-For a single surface, BCM automatically focuses on bonds with at least one
-adsorbate endpoint when the substrate atom count is known. For interfaces, it
-focuses on bonds involving the interface region before the two substrate blocks.
-Substrate-substrate bonds are excluded from both the retained bonds and their
-radial reference distances, including when the substrate and adsorbate share an
-element. Bonds between the variable region and substrate remain included, so
-binding-site differences are retained. This applies to BCM, not CCF.
-
-Surface supercell expansion is included in the substrate count. Automatic cleavage
-sets the focus after the substrate has been generated. Nested multi-surface
-`FormulaUnit` layouts interleave substrate and adsorbate blocks and therefore
-retain whole-cell BCM. Missing/unresolved substrates also retain whole-cell BCM.
-There is no additional TOML focus flag. A descriptor with no retained neighbours
-can be NaN and should not be interpreted as a reliable similarity match.
-
-Use a fresh calculation directory when changing between whole-cell and focused
-BCM: a previous `descriptor.pkl` contains fingerprints with different semantics.
-Automatic descriptor migration and composition-bucket archives are not provided
-by this feature.
+For surface and interface prediction, BCM only compares the bonds that involve
+the adsorbates (surface) or the interface region (interface); bonds inside the
+fixed substrate are left out, so structures that differ only in the adsorbates are
+still told apart. Multi-surface substrates use the whole cell. Start a new
+calculation directory when switching between these cases, because an old
+`descriptor.pkl` contains fingerprints of the other kind.
 
 Default: 1
 
@@ -621,8 +603,10 @@ Default: {}
 
 #### Extra Parameters for surface structure prediction
 
-Surface prediction (`IType = 5`) places adsorbates on a fixed substrate slab. A
-complete example of every mode is given in the case studies.
+Surface prediction (`IType = 5`) places adsorbates on a fixed substrate slab. The
+parameters of the ordinary adsorption mode come first, followed by the
+`[CALYPSO.GENERATOR.CLEAVE]`, `[CALYPSO.GENERATOR.2D]` and
+`[CALYPSO.GENERATOR.CLUSTER]` blocks. Complete inputs are given in the case studies.
 
 #### **`SurfaceGenerationMode`**
 
@@ -647,61 +631,6 @@ For `2D` and `Cluster`:
   height.
 
 Default: `Adsorption`
-
-#### **`[CALYPSO.GENERATOR.2D]`**
-
-Options of the 2D layer, used only with `SurfaceGenerationMode = "2D"`.
-
-| Key              | Description                                                                                         | Default       |
-|:-----------------|:----------------------------------------------------------------------------------------------------|:--------------|
-| `Coverage`       | `"Full"`: the layer uses the substrate cell and covers the whole surface. `"Island"`: a finite flake of `Area`. | `"Full"` without `Area`, otherwise `"Island"` |
-| `Area`           | Area of the island (angstrom^2), must be smaller than the substrate supercell area.                  | required for `Island` |
-| `Thicknesses`    | Layer thickness, e.g. `[0]` for an atomically flat layer, `[1.0]` for buckling up to 1 angstrom.     | parent `Thicknesses` |
-| `SpaceGroup`     | Layer groups, e.g. `["1-80"]`. `Full` keeps only the groups compatible with the substrate cell.     | parent `SpaceGroup` |
-| `Gaps`           | Vacuum of the generated layer (angstrom).                                                            | parent `Gaps` |
-| `MaxBondRatio`   | Overrides the parent `MaxBondRatio`.                                                                 | parent value  |
-
-```toml
-[CALYPSO.GENERATOR.2D]
-Coverage = "Island"
-Area = 25
-Thicknesses = [0.2]
-SpaceGroup = ["1-80"]
-Gaps = [15]
-```
-
-#### **`[CALYPSO.GENERATOR.CLUSTER]`**
-
-Options of the cluster, used only with `SurfaceGenerationMode = "Cluster"`.
-
-| Key              | Description                                                                          | Default       |
-|:-----------------|:-------------------------------------------------------------------------------------|:--------------|
-| `ClusterType`    | `normal` (uses `VolumeUnit`), `cage` or `plane`.                                     | `normal`      |
-| `SpaceGroup`     | Point groups 1-31; `plane` supports 1-7 and 14-18.                                    | parent `SpaceGroup` |
-| `GenerateMethod` | `fortran` or `random`.                                                               | `fortran`     |
-| `Vacancy`        | Vacuum around the generated cluster (angstrom).                                      | `[15, 15, 15]`|
-| `MaxBondRatio`   | Overrides the parent `MaxBondRatio`.                                                 | parent value  |
-
-```toml
-[CALYPSO.GENERATOR.CLUSTER]
-ClusterType = "normal"
-SpaceGroup = ["1-31"]
-GenerateMethod = "fortran"
-Vacancy = [15.0, 15.0, 15.0]
-```
-
-#### **`MaxBondRatio`**
-
-```text
-MaxBondRatio = float
-```
-
-Only for `2D` and `Cluster`. Two seed atoms i and j are treated as bonded when their
-distance is below `MaxBondRatio * (r_cov(i) + r_cov(j))`; this is used to keep the
-seed in one piece when it is taken out of its periodic cell. It must be a positive
-finite number and can be overridden in the `2D` / `CLUSTER` block.
-
-Default: 1.2
 
 #### **`FormulaUnit`** (surface)
 
@@ -757,7 +686,7 @@ Default: 1
 AdsorptionSymmetry = bool
 ```
 
-If true, the adsorption sites are generated with a 2D space group chosen from the
+If true, the adsorption sites are generated with a plane group chosen from the
 crystal system of the substrate lattice. If false, the units are placed one by one
 (units with larger distances first) and each new unit is checked against the
 substrate and the units already placed.
@@ -774,37 +703,24 @@ Path of the substrate slab (VASP format, `.vasp`). `Selective Dynamics` flags ar
 kept during optimization. The c axis must be perpendicular to the ab plane.
 
 Set `SubstratePath = "Automatic"` to cleave the substrate from a bulk crystal with
-the `[CALYPSO.GENERATOR.CLEAVE]` block below.
+the `[CALYPSO.GENERATOR.CLEAVE]` block.
 
-For a multi-surface substrate (several slabs in one cell), add the slab index
-(1, 2, ..., from bottom to top) as an extra column after the coordinates (after the
-`Selective Dynamics` flags if present):
+**Multi-surface substrate.** Several slabs can be stacked in one cell, each with its
+own adsorbates. Add the slab index (1, 2, ..., from bottom to top) as an extra
+column after the coordinates (after the `Selective Dynamics` flags if present):
 
 ```text
-    0.33230999  0.00000000  0.60000002  F  F  F  3
+    0.3323099910    0.0000000000    0.6000000240    F  F  F    3
 ```
+
+When the calculation starts, every slab is written as a separate file next to the
+substrate file: `POSCAR_0.vasp` holds the atoms of slab 1, `POSCAR_1.vasp` those of
+slab 2, and so on. Each file keeps the full cell and the `Selective Dynamics` flags,
+so the files can be opened to check that the slab indices are assigned correctly.
+The program also stops with `layer{i} and layer{i+1} are too close` when the gap
+between two neighboring slabs cannot hold their adsorbates.
 
 There is no default value.
-
-#### **`[CALYPSO.GENERATOR.CLEAVE]`**
-
-Used when `SubstratePath = "Automatic"`. The keys are the TOML keys of the `cleave`
-subcommand (see [calypso.x subcommands](_calypso_subcommands.md)) and are
-case-sensitive. The slab is written as `POSCAR_{millerindex}_slab.vasp` next to
-`input.toml`.
-
-```toml
-[CALYPSO.GENERATOR]
-SubstratePath = "Automatic"
-
-[CALYPSO.GENERATOR.CLEAVE]
-MillerIndex = [1, 0, 0]
-MatrixNotation = [[2, 0], [0, 2]]
-SpaceGroup = 225
-LatticeParameters = [4.10, 4.10, 4.10, 90.0, 90.0, 90.0]
-IrreducibleAtoms = [['Ag', 0.0, 0.0, 0.0]]
-CapBondsWithH = false
-```
 
 #### **`Supercell`**
 
@@ -860,8 +776,17 @@ given in the primitive substrate cell and are expanded with `Supercell`; only x 
 y are used. VASP-like (`.vasp`) and JSON (`.json`) files are supported, with
 `Direct` or `Cartesian` coordinates.
 
-**VASP-like format** (scaling factor 1.0, lattice identical to the substrate, no
-`Selective Dynamics`):
+Each site belongs to one adsorption unit: the name of the site must be the name of
+the unit in `FormulaUnit` (an element such as `H`, or a molecule label such as
+`OH`). A unit is only placed on its own sites, and every unit needs at least as
+many sites as its count in `FormulaUnit` (after the `Supercell` expansion). Two
+units may share the same position.
+
+**VASP-like format.** Line 6 lists the unit names, line 7 the number of sites of
+each unit, and the coordinates follow in the same order. The lattice must be
+identical to the substrate, the scaling factor must be 1.0, and `Selective
+Dynamics` is not supported. In the example below the first site belongs to `H`,
+the second to `O` and the third to `OH`:
 
 ```text
 points
@@ -877,20 +802,19 @@ Direct
      0.666666687         0.333333343         0.500000000
 ```
 
-**JSON format** (no lattice):
+**JSON format.** The sites are grouped by unit name; no lattice is given.
 
 ```js
 {
     "coordinate system": "Direct",
-    "point": {
-        "H":  [[0.666670024, 0.333330005, 0.5],
-               [0.333330005, 0.666670024, 0.5]],
-        "O":  [[0.465000004, 0.491389990, 0.5]]
-    }
+        "point":
+        {
+            "H": [[0.666666687, 0.333333343, 0.500000000]],
+            "O": [[0.333333313, 0.666666627, 0.500000000]],
+            "OH": [[0.666666687, 0.333333343, 0.500000000]]
+        }
 }
 ```
-
-Every adsorption unit in `FormulaUnit` needs at least as many sites as units.
 
 There is no default value.
 
@@ -903,7 +827,9 @@ MoleculesPath = dict of string
 XYZ files (`.xyz`) of the functional groups and molecules in `FormulaUnit`; the
 first atom is the one placed on the adsorption site.
 
-For example, `FormulaUnit = ["(H)2{OH}1"]` needs `MoleculesPath = {"OH" = "./OH.xyz"}`.
+For example, `FormulaUnit = ["(H)2{OH}2{H2O}4"]` needs
+`MoleculesPath = {"OH" = "./OH.xyz", "H2O" = "./H2O.xyz"}`: the `OH` functional
+group is read from `OH.xyz` and the `H2O` molecule from `H2O.xyz`.
 
 Default: {}
 
@@ -917,9 +843,6 @@ MolRotate = bool
 |:----------|:-----------------------------------------------------------------------------------------|
 | `True`    | Each molecule gets a random rotation about its first atom, kept on the vacuum side and checked against `DistanceOfIon`. |
 | `False`   | Molecules keep the orientation of the XYZ file.                                          |
-
-Independent of `AdsorptionSymmetry` and `RotateAtomPosition`; used in random
-generation and PSO.
 
 Default: False
 
@@ -946,9 +869,80 @@ used with `AdsorptionSymmetry = True`.
 
 Default: True
 
+#### **`[CALYPSO.GENERATOR.CLEAVE]`**
+
+Used when `SubstratePath = "Automatic"`. The keys are the TOML keys of the `cleave`
+subcommand (see [calypso.x subcommands](_calypso_subcommands.md)) and are
+case-sensitive. The slab is written as `POSCAR_{millerindex}_slab.vasp` next to
+`input.toml`.
+
+```toml
+[CALYPSO.GENERATOR]
+SubstratePath = "Automatic"
+
+[CALYPSO.GENERATOR.CLEAVE]
+MillerIndex = [1, 0, 0]
+MatrixNotation = [[2, 0], [0, 2]]
+SpaceGroup = 225
+LatticeParameters = [4.10, 4.10, 4.10, 90.0, 90.0, 90.0]
+IrreducibleAtoms = [['Ag', 0.0, 0.0, 0.0]]
+CapBondsWithH = false
+```
+
+#### **`[CALYPSO.GENERATOR.2D]`**
+
+Options of the 2D layer, used only with `SurfaceGenerationMode = "2D"`.
+
+| Key              | Description                                                                                         | Default       |
+|:-----------------|:----------------------------------------------------------------------------------------------------|:--------------|
+| `Coverage`       | `"Full"`: the layer uses the substrate cell and covers the whole surface. `"Island"`: a finite flake of `Area`. | `"Full"` without `Area`, otherwise `"Island"` |
+| `Area`           | Area of the island (angstrom^2), must be smaller than the substrate supercell area.                  | required for `Island` |
+| `Thicknesses`    | Layer thickness, e.g. `[0]` for an atomically flat layer, `[1.0]` for buckling up to 1 angstrom.     | parent `Thicknesses` |
+| `SpaceGroup`     | Layer groups, e.g. `["1-80"]`. `Full` keeps only the groups compatible with the substrate cell.     | parent `SpaceGroup` |
+| `Gaps`           | Vacuum of the cell in which the layer is first generated (angstrom).                                 | parent `Gaps` |
+
+`Gaps` only sets the size of that temporary cell: the layer is taken out of it and
+placed on the substrate, so it does not change the generated structure.
+
+```toml
+[CALYPSO.GENERATOR.2D]
+Area = 25
+Thicknesses = [0.2]
+SpaceGroup = ["1-80"]
+Gaps = [15]
+```
+
+#### **`[CALYPSO.GENERATOR.CLUSTER]`**
+
+Options of the cluster, used only with `SurfaceGenerationMode = "Cluster"`.
+
+| Key              | Description                                                                          | Default       |
+|:-----------------|:-------------------------------------------------------------------------------------|:--------------|
+| `ClusterType`    | `normal` (uses `VolumeUnit`), `cage` or `plane`.                                     | `normal`      |
+| `SpaceGroup`     | Point groups 1-31; `plane` supports 1-7 and 14-18.                                    | parent `SpaceGroup` |
+| `GenerateMethod` | `fortran` or `random`.                                                               | `fortran`     |
+| `Vacancy`        | Vacuum around the cluster in the cell in which it is first generated (angstrom).     | `[15, 15, 15]`|
+
+`Vacancy` only sets the size of that temporary cell: the cluster is taken out of it
+and placed on the substrate, so it does not change the generated structure.
+
+```toml
+[CALYPSO.GENERATOR.CLUSTER]
+ClusterType = "normal"
+SpaceGroup = ["1-31"]
+GenerateMethod = "fortran"
+Vacancy = [15.0, 15.0, 15.0]
+```
+
 #### Extra Parameters for interface structure prediction
 
 Interface prediction (`IType = 6`) generates the interface region between two slabs.
+Both slabs are given with their surface on top. The interface cell takes the lattice
+of `Substrate1Path`: substrate 1 is the lower slab and is kept unchanged, while
+substrate 2 is turned upside down (mirrored along z), placed on top, and its atoms
+are mapped onto the in-plane lattice of substrate 1, i.e. substrate 2 is strained.
+The c axis is rebuilt from the slab thicknesses and `InterfaceThickness`. Use
+the `mismatch` subcommand to obtain two lattice-matched slabs.
 
 #### **`Substrate1Path`**
 
@@ -956,8 +950,9 @@ Interface prediction (`IType = 6`) generates the interface region between two sl
 Substrate1Path = string
 ```
 
-Path of the first slab (VASP format, `.vasp`). Atoms fixed by `Selective Dynamics`
-stay fixed during optimization.
+Path of the lower slab (VASP format, `.vasp`). Its lattice is used for the interface
+cell and it is not deformed. Atoms fixed by `Selective Dynamics` stay fixed during
+optimization.
 
 There is no default value.
 
@@ -967,7 +962,9 @@ There is no default value.
 Substrate2Path = string
 ```
 
-Path of the second slab, same format as `Substrate1Path`.
+Path of the upper slab, same format as `Substrate1Path`. It is turned upside down and
+adapted to the in-plane lattice of substrate 1; `InterfaceTranslation` shifts this
+slab.
 
 There is no default value.
 
@@ -1037,7 +1034,7 @@ Default: 0
 InterfaceTranslation = string
 ```
 
-Rigid in-plane translation between the two slabs.
+Rigid in-plane translation of the upper slab (substrate 2).
 
 | Value  | Meaning                         |
 |:------:|:--------------------------------|
@@ -1055,11 +1052,13 @@ TranslationLimitA = [float, float]
 ```
 
 Range `[min, max]` (angstrom) of the translation along *a*, used when
-`InterfaceTranslation` is `"a"` or `"ab"`. If neither `TranslationLimitA` nor
-`TranslationLimitB` is given, the translation spans the whole lattice vector; if
-only one is given, the other defaults to `[0.0, 1.5]`.
+`InterfaceTranslation` is `"a"` or `"ab"`.
 
-Default: whole *a* length
+If neither `TranslationLimitA` nor `TranslationLimitB` is given, the translation is
+sampled over the whole lattice vector. Once one of them is given, the limits are
+used and the one not given is `[0.0, 1.5]`.
+
+Default: not set (whole *a* length)
 
 #### **`TranslationLimitB`**
 
@@ -1068,9 +1067,9 @@ TranslationLimitB = [float, float]
 ```
 
 Range `[min, max]` (angstrom) of the translation along *b*, used when
-`InterfaceTranslation` is `"b"` or `"ab"`. Same defaults as `TranslationLimitA`.
+`InterfaceTranslation` is `"b"` or `"ab"`. Same rules as `TranslationLimitA`.
 
-Default: whole *b* length
+Default: not set (whole *b* length)
 
 #### **`CoordinateNumber`**
 
@@ -1078,16 +1077,22 @@ Default: whole *b* length
 CoordinateNumber = list of list
 ```
 
-Bonding constraints, required for `RandScheme = 2`. Each entry is
-`[center, neighbor, growth CN, bonding CN, d_min, d_max]`:
+Defines bonding constraints for interface structure generation. Only required when
+`RandScheme = 2`.
 
-| Field        | Description                                                                 |
-|:-------------|:----------------------------------------------------------------------------|
-| center       | Element of the central atom                                                 |
-| neighbor     | Element of the neighboring atom                                             |
-| growth CN    | Maximal coordination number used while growing; 0 means not considered      |
-| bonding CN   | Maximal coordination number used for bonding; 0 means not considered        |
-| d_min, d_max | Inner and outer radius (angstrom) of the neighbor shell                     |
+Each entry is a 6-element list:
+`[central element, neighbor element, maximum growth coordination number, maximum bonding coordination number, minimum distance, maximum distance]`
+
+| Field                       | Type    | Description                                                        |
+|:----------------------------|:--------|:-------------------------------------------------------------------|
+| Central element             | string  | Element symbol of the central atom                                 |
+| Neighbor element            | string  | Element symbol of the neighboring atom                             |
+| Maximum growth coordination number  | integer | Upper limit on the coordination number used during structure growth; 0 means no such neighboring atoms are considered  |
+| Maximum bonding coordination number | integer | Upper limit on the coordination number used for bond formation; 0 means no such neighboring atoms are considered       |
+| Minimum distance            | float   | Inner radius of the nearest-neighbor shell (angstrom)              |
+| Maximum distance            | float   | Outer radius of the nearest-neighbor shell (angstrom)              |
+
+For example:
 
 ```toml
 CoordinateNumber = [['Ti', 'Ti', 0, 0, 2.5, 2.5],
@@ -1096,7 +1101,7 @@ CoordinateNumber = [['Ti', 'Ti', 0, 0, 2.5, 2.5],
                     ['O',  'Ti', 3, 0, 1.8, 2.5]]
 ```
 
-There is no default value.
+There is no default value. You must supply this parameter when `RandScheme = 2`.
 
 #### **`LimitGrowth`**
 
@@ -1104,8 +1109,10 @@ There is no default value.
 LimitGrowth = bool
 ```
 
-With `RandScheme = 2`, grow new interface atoms preferentially from the slab atoms
-(falls back to normal growth after 100 failed tries).
+Only used with `RandScheme = 2`. If true, each new interface atom is bonded to a
+substrate surface atom that has not reached its `CoordinateNumber` yet, so the
+interface grows from the slab surfaces. After 100 failed tries the normal growth
+(from substrate and interface atoms) is used.
 
 Default: False
 
