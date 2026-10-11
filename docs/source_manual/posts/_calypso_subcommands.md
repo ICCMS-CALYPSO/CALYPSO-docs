@@ -74,11 +74,21 @@ calypso.x supercell -p POSCAR.vasp -m 2 1 0 -1 2 0 0 0 1
 (supercell-examples)=
 ### Examples
 
-Input and output files are in `example/cli_supercell/` of CALYPSO-Python.
+The example files are in `example/cli_supercell/` of CALYPSO-Python.
 
-**graphene** — 2x2 in-plane supercell of graphene (`-m 2 2` keeps c).
+#### graphene: 2x2 in-plane supercell
 
-`input_file/run_cli.sh`:
+`-m 2 2` expands a and b and keeps c.
+
+Input files (`example/cli_supercell/graphene/input_file/`):
+
+```text
+.
+├── run_cli.sh
+└── POSCAR.vasp
+```
+
+`run_cli.sh`:
 
 ```bash
 #! /bin/bash
@@ -89,11 +99,43 @@ calypso.x supercell \
     -s POSCAR_super.vasp
 ```
 
-Output: `output_file/POSCAR_super.vasp` (C8).
+:::{dropdown} POSCAR.vasp
+```text
+graphene
+1.0
+   1.2336456308015413   -2.1367369110836267    0.0000000000000000
+   1.2336456308015413    2.1367369110836267    0.0000000000000000
+   0.0000000000000000    0.0000000000000000    7.8030730000000004
+C
+2
+direct
+   0.0000000000000000    0.0000000000000000    0.2500000000000000
+   0.3333333333333333    0.6666666666666666    0.2500000000000000
+```
+:::
 
-**H2O** — 2x2x2 supercell; the `Selective Dynamics` flags of the input are kept.
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_supercell/graphene/output_file/`):
 
-`input_file/run_cli.sh`:
+```text
+.
+├── run_cli.sh
+├── POSCAR.vasp
+└── POSCAR_super.vasp  # supercell
+```
+
+#### H2O: 2x2x2 supercell
+
+The `Selective Dynamics` flags of the input are copied to every image.
+
+Input files (`example/cli_supercell/H2O/input_file/`):
+
+```text
+.
+├── run_cli.sh
+└── POSCAR.vasp
+```
+
+`run_cli.sh`:
 
 ```bash
 #! /bin/bash
@@ -104,8 +146,31 @@ calypso.x supercell \
     -s POSCAR_super.vasp
 ```
 
-Output: `output_file/POSCAR_super.vasp` (H16O8).
+:::{dropdown} POSCAR.vasp
+```text
+H  O
+1.0
+        7.1974005699         0.0000000000         0.0000000000
+        0.0000000000         6.9269595146         0.0000000000
+        0.0000000000         0.0000000000         6.0000000000
+    H    O
+    2    1
+Selective Dynamics
+Direct
+     0.583182871         0.433090448         0.500000000  F T T
+     0.416817158         0.566909552         0.500000000  F F T
+     0.450148702         0.433090448         0.500000000  T F F
+```
+:::
 
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_supercell/H2O/output_file/`):
+
+```text
+.
+├── run_cli.sh
+├── POSCAR.vasp
+└── POSCAR_super.vasp  # supercell
+```
 
 ---
 
@@ -294,20 +359,22 @@ count had to be reduced, passivation may be unreliable for that slab.
 (cleave-examples)=
 ### Examples
 
-Input and output files are in `example/cli_cleave_surface/` of CALYPSO-Python.
+The example files are in `example/cli_cleave_surface/` of CALYPSO-Python.
 
-**diamond_111** — C(111) slab from a CIF file with symmetry, H-capped bottom
-surface (TOML mode).
+#### diamond_111: C(111) slab from a CIF file (TOML mode)
 
-`input_file/run_cli.sh`:
+The CIF symmetry is read directly (`FileSymmetry = true`) and the bottom surface is capped with H (`CapBondsWithH = true`).
 
-```bash
-#! /bin/bash
+Input files (`example/cli_cleave_surface/diamond_111/input_file/`):
 
-calypso.x cleave --input input.toml
+```text
+.
+├── input.toml
+├── run_cli.sh
+└── diamond.cif
 ```
 
-`input_file/input.toml`:
+`input.toml`:
 
 ```toml
 # Test 1: Diamond C(111) surface
@@ -333,11 +400,270 @@ CleaveFilePath    = "POSCAR_111_slab.vasp"
 CleaveFileFormat  = "vasp"
 ```
 
-Output: `POSCAR_111_slab.vasp`, `uv.csv`, `wb-surfgin.toml`.
+`run_cli.sh`:
 
-**TiO2_m5m20** — (-5 -2 0) slab of TiO2 read from a POSCAR (command-line mode).
+```bash
+#! /bin/bash
 
-`input_file/run_cli.sh`:
+calypso.x cleave --input input.toml
+```
+
+:::{dropdown} diamond.cif
+```text
+data_C
+_audit_creation_date              2025-10-24
+_audit_creation_method            'Materials Studio'
+_symmetry_space_group_name_H-M    'FD-3M'
+_symmetry_Int_Tables_number       227
+_symmetry_cell_setting            cubic
+loop_
+_symmetry_equiv_pos_as_xyz
+  x,y,z
+  -x,-y+1/2,z+1/2
+  -x+1/2,y+1/2,-z
+  x+1/2,-y,-z+1/2
+  z,x,y
+  z+1/2,-x,-y+1/2
+  -z,-x+1/2,y+1/2
+  -z+1/2,x+1/2,-y
+  y,z,x
+  -y+1/2,z+1/2,-x
+  y+1/2,-z,-x+1/2
+  -y,-z+1/2,x+1/2
+  y+3/4,x+1/4,-z+3/4
+  -y+1/4,-x+1/4,-z+1/4
+  y+1/4,-x+3/4,z+3/4
+  -y+3/4,x+3/4,z+1/4
+  x+3/4,z+1/4,-y+3/4
+  -x+3/4,z+3/4,y+1/4
+  -x+1/4,-z+1/4,-y+1/4
+  x+1/4,-z+3/4,y+3/4
+  z+3/4,y+1/4,-x+3/4
+  z+1/4,-y+3/4,x+3/4
+  -z+3/4,y+3/4,x+1/4
+  -z+1/4,-y+1/4,-x+1/4
+  -x+1/4,-y+1/4,-z+1/4
+  x+1/4,y+3/4,-z+3/4
+  x+3/4,-y+3/4,z+1/4
+  -x+3/4,y+1/4,z+3/4
+  -z+1/4,-x+1/4,-y+1/4
+  -z+3/4,x+1/4,y+3/4
+  z+1/4,x+3/4,-y+3/4
+  z+3/4,-x+3/4,y+1/4
+  -y+1/4,-z+1/4,-x+1/4
+  y+3/4,-z+3/4,x+1/4
+  -y+3/4,z+1/4,x+3/4
+  y+1/4,z+3/4,-x+3/4
+  -y+1/2,-x,z+1/2
+  y,x,z
+  -y,x+1/2,-z+1/2
+  y+1/2,-x+1/2,-z
+  -x+1/2,-z,y+1/2
+  x+1/2,-z+1/2,-y
+  x,z,y
+  -x,z+1/2,-y+1/2
+  -z+1/2,-y,x+1/2
+  -z,y+1/2,-x+1/2
+  z+1/2,-y+1/2,-x
+  z,y,x
+  x,y+1/2,z+1/2
+  -x,-y,z
+  -x+1/2,y,-z+1/2
+  x+1/2,-y+1/2,-z
+  z,x+1/2,y+1/2
+  z+1/2,-x+1/2,-y
+  -z,-x,y
+  -z+1/2,x,-y+1/2
+  y,z+1/2,x+1/2
+  -y+1/2,z,-x+1/2
+  y+1/2,-z+1/2,-x
+  -y,-z,x
+  y+3/4,x+3/4,-z+1/4
+  -y+1/4,-x+3/4,-z+3/4
+  y+1/4,-x+1/4,z+1/4
+  -y+3/4,x+1/4,z+3/4
+  x+3/4,z+3/4,-y+1/4
+  -x+3/4,z+1/4,y+3/4
+  -x+1/4,-z+3/4,-y+3/4
+  x+1/4,-z+1/4,y+1/4
+  z+3/4,y+3/4,-x+1/4
+  z+1/4,-y+1/4,x+1/4
+  -z+3/4,y+1/4,x+3/4
+  -z+1/4,-y+3/4,-x+3/4
+  -x+1/4,-y+3/4,-z+3/4
+  x+1/4,y+1/4,-z+1/4
+  x+3/4,-y+1/4,z+3/4
+  -x+3/4,y+3/4,z+1/4
+  -z+1/4,-x+3/4,-y+3/4
+  -z+3/4,x+3/4,y+1/4
+  z+1/4,x+1/4,-y+1/4
+  z+3/4,-x+1/4,y+3/4
+  -y+1/4,-z+3/4,-x+3/4
+  y+3/4,-z+1/4,x+3/4
+  -y+3/4,z+3/4,x+1/4
+  y+1/4,z+1/4,-x+1/4
+  -y+1/2,-x+1/2,z
+  y,x+1/2,z+1/2
+  -y,x,-z
+  y+1/2,-x,-z+1/2
+  -x+1/2,-z+1/2,y
+  x+1/2,-z,-y+1/2
+  x,z+1/2,y+1/2
+  -x,z,-y
+  -z+1/2,-y+1/2,x
+  -z,y,-x
+  z+1/2,-y,-x+1/2
+  z,y+1/2,x+1/2
+  x+1/2,y,z+1/2
+  -x+1/2,-y+1/2,z
+  -x,y+1/2,-z+1/2
+  x,-y,-z
+  z+1/2,x,y+1/2
+  z,-x,-y
+  -z+1/2,-x+1/2,y
+  -z,x+1/2,-y+1/2
+  y+1/2,z,x+1/2
+  -y,z+1/2,-x+1/2
+  y,-z,-x
+  -y+1/2,-z+1/2,x
+  y+1/4,x+1/4,-z+1/4
+  -y+3/4,-x+1/4,-z+3/4
+  y+3/4,-x+3/4,z+1/4
+  -y+1/4,x+3/4,z+3/4
+  x+1/4,z+1/4,-y+1/4
+  -x+1/4,z+3/4,y+3/4
+  -x+3/4,-z+1/4,-y+3/4
+  x+3/4,-z+3/4,y+1/4
+  z+1/4,y+1/4,-x+1/4
+  z+3/4,-y+3/4,x+1/4
+  -z+1/4,y+3/4,x+3/4
+  -z+3/4,-y+1/4,-x+3/4
+  -x+3/4,-y+1/4,-z+3/4
+  x+3/4,y+3/4,-z+1/4
+  x+1/4,-y+3/4,z+3/4
+  -x+1/4,y+1/4,z+1/4
+  -z+3/4,-x+1/4,-y+3/4
+  -z+1/4,x+1/4,y+1/4
+  z+3/4,x+3/4,-y+1/4
+  z+1/4,-x+3/4,y+3/4
+  -y+3/4,-z+1/4,-x+3/4
+  y+1/4,-z+3/4,x+3/4
+  -y+1/4,z+1/4,x+1/4
+  y+3/4,z+3/4,-x+1/4
+  -y,-x,z
+  y+1/2,x,z+1/2
+  -y+1/2,x+1/2,-z
+  y,-x+1/2,-z+1/2
+  -x,-z,y
+  x,-z+1/2,-y+1/2
+  x+1/2,z,y+1/2
+  -x+1/2,z+1/2,-y
+  -z,-y,x
+  -z+1/2,y+1/2,-x
+  z,-y+1/2,-x+1/2
+  z+1/2,y,x+1/2
+  x+1/2,y+1/2,z
+  -x+1/2,-y,z+1/2
+  -x,y,-z
+  x,-y+1/2,-z+1/2
+  z+1/2,x+1/2,y
+  z,-x+1/2,-y+1/2
+  -z+1/2,-x,y+1/2
+  -z,x,-y
+  y+1/2,z+1/2,x
+  -y,z,-x
+  y,-z+1/2,-x+1/2
+  -y+1/2,-z,x+1/2
+  y+1/4,x+3/4,-z+3/4
+  -y+3/4,-x+3/4,-z+1/4
+  y+3/4,-x+1/4,z+3/4
+  -y+1/4,x+1/4,z+1/4
+  x+1/4,z+3/4,-y+3/4
+  -x+1/4,z+1/4,y+1/4
+  -x+3/4,-z+3/4,-y+1/4
+  x+3/4,-z+1/4,y+3/4
+  z+1/4,y+3/4,-x+3/4
+  z+3/4,-y+1/4,x+3/4
+  -z+1/4,y+1/4,x+1/4
+  -z+3/4,-y+3/4,-x+1/4
+  -x+3/4,-y+3/4,-z+1/4
+  x+3/4,y+1/4,-z+3/4
+  x+1/4,-y+1/4,z+1/4
+  -x+1/4,y+3/4,z+3/4
+  -z+3/4,-x+3/4,-y+1/4
+  -z+1/4,x+3/4,y+3/4
+  z+3/4,x+1/4,-y+3/4
+  z+1/4,-x+1/4,y+1/4
+  -y+3/4,-z+3/4,-x+1/4
+  y+1/4,-z+1/4,x+1/4
+  -y+1/4,z+3/4,x+3/4
+  y+3/4,z+1/4,-x+3/4
+  -y,-x+1/2,z+1/2
+  y+1/2,x+1/2,z
+  -y+1/2,x,-z+1/2
+  y,-x,-z
+  -x,-z+1/2,y+1/2
+  x,-z,-y
+  x+1/2,z+1/2,y
+  -x+1/2,z,-y+1/2
+  -z,-y+1/2,x+1/2
+  -z+1/2,y,-x+1/2
+  z,-y,-x
+  z+1/2,y+1/2,x
+_cell_length_a                    3.5668
+_cell_length_b                    3.5668
+_cell_length_c                    3.5668
+_cell_angle_alpha                 90.0000
+_cell_angle_beta                  90.0000
+_cell_angle_gamma                 90.0000
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_U_iso_or_equiv
+_atom_site_adp_type
+_atom_site_occupancy
+C1     C     0.00000   0.00000   0.00000   0.00000  Uiso   1.00
+loop_
+_geom_bond_atom_site_label_1
+_geom_bond_atom_site_label_2
+_geom_bond_distance
+_geom_bond_site_symmetry_2
+_ccdc_geom_bond_type
+C1     C1      1.544   14    S
+C1     C1      1.544   16_445 S
+C1     C1      1.544   13_454 S
+C1     C1      1.544   15_544 S
+```
+:::
+
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_cleave_surface/diamond_111/output_file/`):
+
+```text
+.
+├── input.toml
+├── run_cli.sh
+├── diamond.cif
+├── POSCAR_111_slab.vasp  # surface slab
+├── uv.csv                # in-plane surface vectors u, v
+└── wb-surfgin.toml       # summary of the parameters used
+```
+
+#### TiO2_m5m20: (-5 -2 0) slab from a POSCAR (command-line mode)
+
+The symmetry of `TiO2.vasp` is detected automatically.
+
+Input files (`example/cli_cleave_surface/TiO2_m5m20/input_file/`):
+
+```text
+.
+├── run_cli.sh
+└── TiO2.vasp
+```
+
+`run_cli.sh`:
 
 ```bash
 #!/bin/bash
@@ -359,8 +685,41 @@ calypso.x cleave \
     --cleavefileformat vasp
 ```
 
-Output: `POSCAR_m5m20_slab.vasp`, `uv.csv`, `wb-surfgin.toml`.
+:::{dropdown} TiO2.vasp
+```text
+anatanse-opt
+1.0
+        3.9033000469         0.0000000000         0.0000000000
+        0.0000000000         3.9033000469         0.0000000000
+        0.0000000000         0.0000000000         9.6996002197
+   Ti    O
+    4    8
+Direct
+     0.500000000         0.500000000         0.000000000
+     0.000000000         0.000000000         0.500000000
+     0.500000000         0.000000000         0.250000000
+     0.000000000         0.500000000         0.750000000
+     0.500000000         0.500000000         0.207849979
+     0.000000000         0.000000000         0.707849979
+     0.500000000         0.000000000         0.457849979
+     0.000000000         0.500000000         0.957849979
+     0.000000000         0.500000000         0.542150021
+     0.500000000         0.000000000         0.042150021
+     0.000000000         0.000000000         0.292150021
+     0.500000000         0.500000000         0.792150021
+```
+:::
 
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_cleave_surface/TiO2_m5m20/output_file/`):
+
+```text
+.
+├── run_cli.sh
+├── TiO2.vasp
+├── POSCAR_m5m20_slab.vasp  # surface slab
+├── uv.csv                  # in-plane surface vectors u, v
+└── wb-surfgin.toml         # summary of the parameters used
+```
 
 ---
 
@@ -545,22 +904,23 @@ and its outer/passivated side faces the vacuum. Set `FlipSlab1Z=false` to stack
 (mismatch-examples)=
 ### Examples
 
-Input and output files are in `example/cli_mismatch/` of CALYPSO-Python. Every
-example writes `matched_lattices.csv`, `wb-mismatch.toml` and
-`matched_supercells/pair_N/` (`lat1_supercell.vasp`, `lat2_supercell.vasp`,
-`combined_interface.vasp`) for the three best matches.
+The example files are in `example/cli_mismatch/` of CALYPSO-Python.
 
-**rutile_anatase** — rutile / anatase TiO2 from CIF files (TOML mode).
+#### rutile_anatase: rutile / anatase TiO2 (TOML mode)
 
-`input_file/run_cli.sh`:
+Both crystals are read from CIF files with their symmetry.
 
-```bash
-#! /bin/bash
+Input files (`example/cli_mismatch/rutile_anatase/input_file/`):
 
-calypso.x mismatch --input mismatch.toml
+```text
+.
+├── mismatch.toml
+├── run_cli.sh
+├── anatase.cif
+└── rutile.cif
 ```
 
-`input_file/mismatch.toml`:
+`mismatch.toml`:
 
 ```toml
 # Example: rutile TiO2 / anatase TiO2 lattice matching (TOML mode)
@@ -616,9 +976,7 @@ Typ    = 1
 FlipSlab1Z = true
 ```
 
-**Ni_BN** — h-BN monolayer on bulk Ni with fixed Miller indices (TOML mode).
-
-`input_file/run_cli.sh`:
+`run_cli.sh`:
 
 ```bash
 #! /bin/bash
@@ -626,7 +984,172 @@ FlipSlab1Z = true
 calypso.x mismatch --input mismatch.toml
 ```
 
-`input_file/mismatch.toml`:
+:::{dropdown} anatase.cif
+```text
+data_anatanse-opt
+_audit_creation_date              2015-11-18
+_audit_creation_method            'Materials Studio'
+_symmetry_space_group_name_H-M    'I41/AMD'
+_symmetry_Int_Tables_number       141
+_symmetry_cell_setting            tetragonal
+loop_
+_symmetry_equiv_pos_as_xyz
+  x,y,z
+  -x+1/2,-y+1/2,z+1/2
+  -y,x+1/2,z+1/4
+  y+1/2,-x,z+3/4
+  -x+1/2,y,-z+3/4
+  x,-y+1/2,-z+1/4
+  y+1/2,x+1/2,-z+1/2
+  -y,-x,-z
+  -x,-y+1/2,-z+1/4
+  x+1/2,y,-z+3/4
+  y,-x,-z
+  -y+1/2,x+1/2,-z+1/2
+  x+1/2,-y+1/2,z+1/2
+  -x,y,z
+  -y+1/2,-x,z+3/4
+  y,x+1/2,z+1/4
+  x+1/2,y+1/2,z+1/2
+  -x,-y,z
+  -y+1/2,x,z+3/4
+  y,-x+1/2,z+1/4
+  -x,y+1/2,-z+1/4
+  x+1/2,-y,-z+3/4
+  y,x,-z
+  -y+1/2,-x+1/2,-z+1/2
+  -x+1/2,-y,-z+3/4
+  x,y+1/2,-z+1/4
+  y+1/2,-x+1/2,-z+1/2
+  -y,x,-z
+  x,-y,z
+  -x+1/2,y+1/2,z+1/2
+  -y,-x+1/2,z+1/4
+  y+1/2,x,z+3/4
+_cell_length_a                    3.9033
+_cell_length_b                    3.9033
+_cell_length_c                    9.6996
+_cell_angle_alpha                 90.0000
+_cell_angle_beta                  90.0000
+_cell_angle_gamma                 90.0000
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_U_iso_or_equiv
+_atom_site_adp_type
+_atom_site_occupancy
+Ti1    Ti   -0.50000   0.50000   1.00000   0.01267  Uiso   1.00
+O1     O    -0.50000   0.50000   1.20785   0.01267  Uiso   1.00
+loop_
+_geom_bond_atom_site_label_1
+_geom_bond_atom_site_label_2
+_geom_bond_distance
+_geom_bond_site_symmetry_2
+_ccdc_geom_bond_type
+Ti1    O1      2.016   .     S
+Ti1    O1      2.016   8_557 S
+Ti1    Ti1     3.113   3     S
+Ti1    Ti1     3.113   4_454 S
+Ti1    Ti1     3.113   4_354 S
+Ti1    Ti1     3.113   3_565 S
+Ti1    O1      1.994   6_557 S
+Ti1    O1      1.994   4_454 S
+Ti1    O1      1.994   4_354 S
+Ti1    O1      1.994   6_567 S
+O1     Ti1     1.994   3     S
+O1     Ti1     1.994   3_565 S
+```
+:::
+
+:::{dropdown} rutile.cif
+```text
+data_rutile-opt
+_audit_creation_date              2015-11-18
+_audit_creation_method            'Materials Studio'
+_symmetry_space_group_name_H-M    'P42/MNM'
+_symmetry_Int_Tables_number       136
+_symmetry_cell_setting            tetragonal
+loop_
+_symmetry_equiv_pos_as_xyz
+  x,y,z
+  -x,-y,z
+  -y+1/2,x+1/2,z+1/2
+  y+1/2,-x+1/2,z+1/2
+  -x+1/2,y+1/2,-z+1/2
+  x+1/2,-y+1/2,-z+1/2
+  y,x,-z
+  -y,-x,-z
+  -x,-y,-z
+  x,y,-z
+  y+1/2,-x+1/2,-z+1/2
+  -y+1/2,x+1/2,-z+1/2
+  x+1/2,-y+1/2,z+1/2
+  -x+1/2,y+1/2,z+1/2
+  -y,-x,z
+  y,x,z
+_cell_length_a                    4.6953
+_cell_length_b                    4.6953
+_cell_length_c                    3.0442
+_cell_angle_alpha                 90.0000
+_cell_angle_beta                  90.0000
+_cell_angle_gamma                 90.0000
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_U_iso_or_equiv
+_atom_site_adp_type
+_atom_site_occupancy
+Ti1    Ti    0.00000   0.00000  -0.00000   0.01267  Uiso   1.00
+O1     O     0.30533   0.30533  -0.00000   0.01267  Uiso   1.00
+```
+:::
+
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_mismatch/rutile_anatase/output_file/`):
+
+```text
+.
+├── mismatch.toml
+├── run_cli.sh
+├── anatase.cif
+├── rutile.cif
+├── matched_lattices.csv             # list of the matched pairs
+├── wb-mismatch.toml                 # summary of the parameters used
+└── matched_supercells/              # one folder per match
+    ├── pair_1/
+    │   ├── combined_interface.vasp  # stacked interface
+    │   ├── lat1_supercell.vasp      # slab of crystal 1
+    │   └── lat2_supercell.vasp      # slab of crystal 2
+    ├── pair_2/
+    │   ├── combined_interface.vasp  # stacked interface
+    │   ├── lat1_supercell.vasp      # slab of crystal 1
+    │   └── lat2_supercell.vasp      # slab of crystal 2
+    └── pair_3/
+        ├── combined_interface.vasp  # stacked interface
+        ├── lat1_supercell.vasp      # slab of crystal 1
+        └── lat2_supercell.vasp      # slab of crystal 2
+```
+
+#### Ni_BN: h-BN monolayer on bulk Ni (TOML mode)
+
+The Miller indices of both crystals are fixed with `SpecifyingMillerIndex`.
+
+Input files (`example/cli_mismatch/Ni_BN/input_file/`):
+
+```text
+.
+├── mismatch.toml
+├── run_cli.sh
+├── BN.vasp
+└── Ni.vasp
+```
+
+`mismatch.toml`:
 
 ```toml
 # Example: BN monolayer / Ni bulk interface (TOML mode)
@@ -685,9 +1208,85 @@ DeltaY = 0.0
 Typ    = 1
 ```
 
-**LCO_LPS** — LiCoO2 / Li3PS4 from CIF files (command-line mode).
+`run_cli.sh`:
 
-`input_file/run_cli.sh`:
+```bash
+#! /bin/bash
+
+calypso.x mismatch --input mismatch.toml
+```
+
+:::{dropdown} BN.vasp
+```text
+B2 N2
+1.0
+        2.5159442425         0.0000000000         0.0000000000
+       -1.2579721212         2.1788716285         0.0000000000
+        0.0000000000         0.0000000000         7.2582530975
+    B    N
+    1    1
+Direct
+     0.000000000         0.000000000         0.250000000
+     0.666666670         0.333333330         0.250000000
+```
+:::
+
+:::{dropdown} Ni.vasp
+```text
+Ni
+1.0
+        3.5239999294         0.0000000000         0.0000000000
+        0.0000000000         3.5239999294         0.0000000000
+        0.0000000000         0.0000000000         3.5239999294
+   Ni
+    4
+Direct
+     0.000000000         0.000000000         0.000000000
+     0.000000000         0.500000000         0.500000000
+     0.500000000         0.000000000         0.500000000
+     0.500000000         0.500000000         0.000000000
+```
+:::
+
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_mismatch/Ni_BN/output_file/`):
+
+```text
+.
+├── mismatch.toml
+├── run_cli.sh
+├── BN.vasp
+├── Ni.vasp
+├── matched_lattices.csv             # list of the matched pairs
+├── wb-mismatch.toml                 # summary of the parameters used
+└── matched_supercells/              # one folder per match
+    ├── pair_1/
+    │   ├── combined_interface.vasp  # stacked interface
+    │   ├── lat1_supercell.vasp      # slab of crystal 1
+    │   └── lat2_supercell.vasp      # slab of crystal 2
+    ├── pair_2/
+    │   ├── combined_interface.vasp  # stacked interface
+    │   ├── lat1_supercell.vasp      # slab of crystal 1
+    │   └── lat2_supercell.vasp      # slab of crystal 2
+    └── pair_3/
+        ├── combined_interface.vasp  # stacked interface
+        ├── lat1_supercell.vasp      # slab of crystal 1
+        └── lat2_supercell.vasp      # slab of crystal 2
+```
+
+#### LCO_LPS: LiCoO2 / Li3PS4 (command-line mode)
+
+Both crystals are read from CIF files with their symmetry.
+
+Input files (`example/cli_mismatch/LCO_LPS/input_file/`):
+
+```text
+.
+├── run_cli.sh
+├── lat1.cif
+└── lat2.cif
+```
+
+`run_cli.sh`:
 
 ```bash
 #! /bin/bash
@@ -709,10 +1308,153 @@ calypso.x mismatch \
     --deltaz 2.5 --vacuum 15.0 --typ 1 --pairformat vasp
 ```
 
-**MXene_MoS2** — MoS2 / Mo2CO2 monolayers, layer plane fixed to (0 0 1)
-(command-line mode).
+:::{dropdown} lat1.cif
+```text
+data_LiCoO2-opt
+_audit_creation_date              2017-10-16
+_audit_creation_method            'Materials Studio'
+_symmetry_space_group_name_H-M    'R-3M'
+_symmetry_Int_Tables_number       166
+_symmetry_cell_setting            trigonal
+loop_
+_symmetry_equiv_pos_as_xyz
+  x,y,z
+  -y,x-y,z
+  -x+y,-x,z
+  y,x,-z
+  x-y,-y,-z
+  -x,-x+y,-z
+  -x,-y,-z
+  y,-x+y,-z
+  x-y,x,-z
+  -y,-x,z
+  -x+y,y,z
+  x,x-y,z
+  x+2/3,y+1/3,z+1/3
+  -y+2/3,x-y+1/3,z+1/3
+  -x+y+2/3,-x+1/3,z+1/3
+  y+2/3,x+1/3,-z+1/3
+  x-y+2/3,-y+1/3,-z+1/3
+  -x+2/3,-x+y+1/3,-z+1/3
+  -x+2/3,-y+1/3,-z+1/3
+  y+2/3,-x+y+1/3,-z+1/3
+  x-y+2/3,x+1/3,-z+1/3
+  -y+2/3,-x+1/3,z+1/3
+  -x+y+2/3,y+1/3,z+1/3
+  x+2/3,x-y+1/3,z+1/3
+  x+1/3,y+2/3,z+2/3
+  -y+1/3,x-y+2/3,z+2/3
+  -x+y+1/3,-x+2/3,z+2/3
+  y+1/3,x+2/3,-z+2/3
+  x-y+1/3,-y+2/3,-z+2/3
+  -x+1/3,-x+y+2/3,-z+2/3
+  -x+1/3,-y+2/3,-z+2/3
+  y+1/3,-x+y+2/3,-z+2/3
+  x-y+1/3,x+2/3,-z+2/3
+  -y+1/3,-x+2/3,z+2/3
+  -x+y+1/3,y+2/3,z+2/3
+  x+1/3,x-y+2/3,z+2/3
+_cell_length_a                    2.8212
+_cell_length_b                    2.8212
+_cell_length_c                    14.1681
+_cell_angle_alpha                 90.0000
+_cell_angle_beta                  90.0000
+_cell_angle_gamma                 120.0000
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_U_iso_or_equiv
+_atom_site_adp_type
+_atom_site_occupancy
+Li1    Li    0.00000   0.00000   0.50000   0.01267  Uiso   1.00
+Co1    Co    0.66667   0.33333   0.33333   0.01267  Uiso   1.00
+O1     O     0.66667   0.33333   0.59348   0.01267  Uiso   1.00
+```
+:::
 
-`input_file/run_cli.sh`:
+:::{dropdown} lat2.cif
+```text
+data_Li3PS4-opt
+_audit_creation_date              2017-10-16
+_audit_creation_method            'Materials Studio'
+_symmetry_space_group_name_H-M    'PNMA'
+_symmetry_Int_Tables_number       62
+_symmetry_cell_setting            orthorhombic
+loop_
+_symmetry_equiv_pos_as_xyz
+  x,y,z
+  -x+1/2,-y,z+1/2
+  -x,y+1/2,-z
+  x+1/2,-y+1/2,-z+1/2
+  -x,-y,-z
+  x+1/2,y,-z+1/2
+  x,-y+1/2,z
+  -x+1/2,y+1/2,z+1/2
+_cell_length_a                    13.0669
+_cell_length_b                    8.0991
+_cell_length_c                    6.2530
+_cell_angle_alpha                 90.0000
+_cell_angle_beta                  90.0000
+_cell_angle_gamma                 90.0000
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_U_iso_or_equiv
+_atom_site_adp_type
+_atom_site_occupancy
+Li1    Li   -0.16695   0.96733  -0.60975   0.01267  Uiso   1.00
+S9     S    -0.34637   0.96376  -0.72928   0.01267  Uiso   1.00
+Li9    Li   -0.50000  -0.00000  -0.50000   0.01267  Uiso   1.00
+P1     P    -0.41040   0.75000  -0.84658   0.01267  Uiso   1.00
+S1     S    -0.39904   0.75000  -0.17207   0.01267  Uiso   1.00
+S5     S     0.44016   0.75000  -0.72634   0.01267  Uiso   1.00
+```
+:::
+
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_mismatch/LCO_LPS/output_file/`):
+
+```text
+.
+├── run_cli.sh
+├── lat1.cif
+├── lat2.cif
+├── matched_lattices.csv             # list of the matched pairs
+├── wb-mismatch.toml                 # summary of the parameters used
+└── matched_supercells/              # one folder per match
+    ├── pair_1/
+    │   ├── combined_interface.vasp  # stacked interface
+    │   ├── lat1_supercell.vasp      # slab of crystal 1
+    │   └── lat2_supercell.vasp      # slab of crystal 2
+    ├── pair_2/
+    │   ├── combined_interface.vasp  # stacked interface
+    │   ├── lat1_supercell.vasp      # slab of crystal 1
+    │   └── lat2_supercell.vasp      # slab of crystal 2
+    └── pair_3/
+        ├── combined_interface.vasp  # stacked interface
+        ├── lat1_supercell.vasp      # slab of crystal 1
+        └── lat2_supercell.vasp      # slab of crystal 2
+```
+
+#### MXene_MoS2: MoS2 / Mo2CO2 monolayers (command-line mode)
+
+The layer plane of both monolayers is fixed to (0 0 1).
+
+Input files (`example/cli_mismatch/MXene_MoS2/input_file/`):
+
+```text
+.
+├── run_cli.sh
+├── Mo2CO2.vasp
+└── MoS2.vasp
+```
+
+`run_cli.sh`:
 
 ```bash
 #! /bin/bash
@@ -736,6 +1478,69 @@ calypso.x mismatch \
     --deltaz 3.0 --vacuum 15.0 --typ 1 --pairformat vasp
 ```
 
+:::{dropdown} Mo2CO2.vasp
+```text
+POSCAR
+   1.00000000000000
+     2.8713901549661016   -0.0000000000004610    0.0000000000000000
+    -1.4356950774334485    2.4866968183927578    0.0000000000000000
+    -0.0000000000000000   -0.0000000000000000   29.9981157952378261
+   Mo   C    O
+     2     1     2
+Direct
+  0.6666666870000029  0.3333333429999996  0.4540913541341994
+  0.3333333129999971  0.6666666269999979  0.5459086458658006
+ -0.0000000000000000  0.0000000000000000  0.5000000000000000
+  0.0000000000000000  0.0000000000000000  0.5865507526397682
+ -0.0000000000000000 -0.0000000000000000  0.4134492473602318
+
+  0.00000000E+00  0.00000000E+00  0.00000000E+00
+  0.00000000E+00  0.00000000E+00  0.00000000E+00
+  0.00000000E+00  0.00000000E+00  0.00000000E+00
+  0.00000000E+00  0.00000000E+00  0.00000000E+00
+  0.00000000E+00  0.00000000E+00  0.00000000E+00
+```
+:::
+
+:::{dropdown} MoS2.vasp
+```text
+MoS2
+1.0
+        3.1621000767         0.0000000000         0.0000000000
+       -1.5810500383         2.7384589957         0.0000000000
+        0.0000000000         0.0000000000        30.4978008270
+   Mo    S
+    1    2
+Direct
+     0.666666985         0.333332986         0.500000000
+     0.000000000         0.000000000         0.448559999
+     0.000000000         0.000000000         0.551440001
+```
+:::
+
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_mismatch/MXene_MoS2/output_file/`):
+
+```text
+.
+├── run_cli.sh
+├── Mo2CO2.vasp
+├── MoS2.vasp
+├── matched_lattices.csv             # list of the matched pairs
+├── wb-mismatch.toml                 # summary of the parameters used
+└── matched_supercells/              # one folder per match
+    ├── pair_1/
+    │   ├── combined_interface.vasp  # stacked interface
+    │   ├── lat1_supercell.vasp      # slab of crystal 1
+    │   └── lat2_supercell.vasp      # slab of crystal 2
+    ├── pair_2/
+    │   ├── combined_interface.vasp  # stacked interface
+    │   ├── lat1_supercell.vasp      # slab of crystal 1
+    │   └── lat2_supercell.vasp      # slab of crystal 2
+    └── pair_3/
+        ├── combined_interface.vasp  # stacked interface
+        ├── lat1_supercell.vasp      # slab of crystal 1
+        └── lat2_supercell.vasp      # slab of crystal 2
+```
 
 ---
 
@@ -853,19 +1658,23 @@ the two slabs have already been oriented exactly as desired.
 (combine-examples)=
 ### Examples
 
-Input and output files are in `example/cli_combine/` of CALYPSO-Python.
+The example files are in `example/cli_combine/` of CALYPSO-Python.
 
-**rutile_anatase** — stack a matched rutile / anatase pair from `mismatch`.
+#### rutile_anatase: stack a matched rutile / anatase pair
 
-`input_file/run_cli.sh`:
+The two slabs are a matched pair from `mismatch`.
 
-```bash
-#! /bin/bash
+Input files (`example/cli_combine/rutile_anatase/input_file/`):
 
-calypso.x combine --input combine.toml
+```text
+.
+├── combine.toml
+├── run_cli.sh
+├── anatase_slab.vasp
+└── rutile_slab.vasp
 ```
 
-`input_file/combine.toml`:
+`combine.toml`:
 
 ```toml
 # Example: combine two lattice-matched slabs into an interface.
@@ -893,11 +1702,7 @@ OutputFile   = "rutile_anatase_interface.vasp"
 OutputFormat = "vasp"
 ```
 
-Output: `rutile_anatase_interface.vasp`, `wb-combine.toml`.
-
-**MoS2_MXene** — stack monolayer MoS2 on Mo2CO2.
-
-`input_file/run_cli.sh`:
+`run_cli.sh`:
 
 ```bash
 #! /bin/bash
@@ -905,7 +1710,444 @@ Output: `rutile_anatase_interface.vasp`, `wb-combine.toml`.
 calypso.x combine --input combine.toml
 ```
 
-`input_file/combine.toml`:
+:::{dropdown} anatase_slab.vasp
+```text
+CalyData_O104Ti65
+1.0
+     11.709900000000       7.806600000000       0.000000000000
+     -7.806600000000      11.709900000000       0.000000000000
+      0.000000000000       0.000000000000      24.699600000000
+O Ti
+104 65
+Direct
+   0.1153846154    0.9230769231    0.5785827244
+   0.0384615385    0.3076923077    0.5785827244
+   0.1923076923    0.5384615385    0.5785827244
+   0.3461538462    0.7692307692    0.5785827244
+   0.2692307692    0.1538461538    0.5785827244
+   0.4230769231    0.3846153846    0.5785827244
+   0.5769230769    0.6153846154    0.5785827244
+   0.7307692308    0.8461538462    0.5785827244
+   0.5000000000    0.0000000000    0.5785827244
+   0.6538461538    0.2307692308    0.5785827244
+   0.8076923077    0.4615384615    0.5785827244
+   0.9615384615    0.6923076923    0.5785827244
+   0.8846153846    0.0769230769    0.5785827244
+   0.0384615385    0.8076923077    0.5135118844
+   0.1153846154    0.4230769231    0.5135118844
+   0.2692307692    0.6538461538    0.5135118844
+   0.4230769231    0.8846153846    0.5135118844
+   0.1923076923    0.0384615385    0.5135118844
+   0.3461538462    0.2692307692    0.5135118844
+   0.5000000000    0.5000000000    0.5135118844
+   0.6538461538    0.7307692308    0.5135118844
+   0.8076923077    0.9615384615    0.5135118844
+   0.5769230769    0.1153846154    0.5135118844
+   0.7307692308    0.3461538462    0.5135118844
+   0.8846153846    0.5769230769    0.5135118844
+   0.9615384615    0.1923076923    0.5135118844
+   0.0769230769    0.6153846154    0.4804070455
+   0.2307692308    0.8461538462    0.4804070455
+   0.0000000000    0.0000000000    0.4804070455
+   0.1538461538    0.2307692308    0.4804070455
+   0.3076923077    0.4615384615    0.4804070455
+   0.4615384615    0.6923076923    0.4804070455
+   0.6153846154    0.9230769231    0.4804070455
+   0.3846153846    0.0769230769    0.4804070455
+   0.5384615385    0.3076923077    0.4804070455
+   0.6923076923    0.5384615385    0.4804070455
+   0.8461538462    0.7692307692    0.4804070455
+   0.7692307692    0.1538461538    0.4804070455
+   0.9230769231    0.3846153846    0.4804070455
+   0.1153846154    0.9230769231    0.4153362054
+   0.0384615385    0.3076923077    0.4153362054
+   0.1923076923    0.5384615385    0.4153362054
+   0.3461538462    0.7692307692    0.4153362054
+   0.2692307692    0.1538461538    0.4153362054
+   0.4230769231    0.3846153846    0.4153362054
+   0.5769230769    0.6153846154    0.4153362054
+   0.7307692308    0.8461538462    0.4153362054
+   0.5000000000    0.0000000000    0.4153362054
+   0.6538461538    0.2307692308    0.4153362054
+   0.8076923077    0.4615384615    0.4153362054
+   0.9615384615    0.6923076923    0.4153362054
+   0.8846153846    0.0769230769    0.4153362054
+   0.0000000000    0.5000000000    0.3822313665
+   0.1538461538    0.7307692308    0.3822313665
+   0.3076923077    0.9615384615    0.3822313665
+   0.0769230769    0.1153846154    0.3822313665
+   0.2307692308    0.3461538462    0.3822313665
+   0.3846153846    0.5769230769    0.3822313665
+   0.5384615385    0.8076923077    0.3822313665
+   0.4615384615    0.1923076923    0.3822313665
+   0.6153846154    0.4230769231    0.3822313665
+   0.7692307692    0.6538461538    0.3822313665
+   0.9230769231    0.8846153846    0.3822313665
+   0.6923076923    0.0384615385    0.3822313665
+   0.8461538462    0.2692307692    0.3822313665
+   0.0769230769    0.6153846154    0.3171605265
+   0.2307692308    0.8461538462    0.3171605265
+   0.0000000000    0.0000000000    0.3171605265
+   0.1538461538    0.2307692308    0.3171605265
+   0.3076923077    0.4615384615    0.3171605265
+   0.4615384615    0.6923076923    0.3171605265
+   0.6153846154    0.9230769231    0.3171605265
+   0.3846153846    0.0769230769    0.3171605265
+   0.5384615385    0.3076923077    0.3171605265
+   0.6923076923    0.5384615385    0.3171605265
+   0.8461538462    0.7692307692    0.3171605265
+   0.7692307692    0.1538461538    0.3171605265
+   0.9230769231    0.3846153846    0.3171605265
+   0.0384615385    0.8076923077    0.2840556875
+   0.1153846154    0.4230769231    0.2840556875
+   0.2692307692    0.6538461538    0.2840556875
+   0.4230769231    0.8846153846    0.2840556875
+   0.1923076923    0.0384615385    0.2840556875
+   0.3461538462    0.2692307692    0.2840556875
+   0.5000000000    0.5000000000    0.2840556875
+   0.6538461538    0.7307692308    0.2840556875
+   0.8076923077    0.9615384615    0.2840556875
+   0.5769230769    0.1153846154    0.2840556875
+   0.7307692308    0.3461538462    0.2840556875
+   0.8846153846    0.5769230769    0.2840556875
+   0.9615384615    0.1923076923    0.2840556875
+   0.0000000000    0.5000000000    0.2189848475
+   0.1538461538    0.7307692308    0.2189848475
+   0.3076923077    0.9615384615    0.2189848475
+   0.0769230769    0.1153846154    0.2189848475
+   0.2307692308    0.3461538462    0.2189848475
+   0.3846153846    0.5769230769    0.2189848475
+   0.5384615385    0.8076923077    0.2189848475
+   0.4615384615    0.1923076923    0.2189848475
+   0.6153846154    0.4230769231    0.2189848475
+   0.7692307692    0.6538461538    0.2189848475
+   0.9230769231    0.8846153846    0.2189848475
+   0.6923076923    0.0384615385    0.2189848475
+   0.8461538462    0.2692307692    0.2189848475
+   0.0384615385    0.8076923077    0.5951351439
+   0.1153846154    0.4230769231    0.5951351439
+   0.2692307692    0.6538461538    0.5951351439
+   0.4230769231    0.8846153846    0.5951351439
+   0.1923076923    0.0384615385    0.5951351439
+   0.3461538462    0.2692307692    0.5951351439
+   0.5000000000    0.5000000000    0.5951351439
+   0.6538461538    0.7307692308    0.5951351439
+   0.8076923077    0.9615384615    0.5951351439
+   0.5769230769    0.1153846154    0.5951351439
+   0.7307692308    0.3461538462    0.5951351439
+   0.8846153846    0.5769230769    0.5951351439
+   0.9615384615    0.1923076923    0.5951351439
+   0.1153846154    0.9230769231    0.4969594649
+   0.0384615385    0.3076923077    0.4969594649
+   0.1923076923    0.5384615385    0.4969594649
+   0.3461538462    0.7692307692    0.4969594649
+   0.2692307692    0.1538461538    0.4969594649
+   0.4230769231    0.3846153846    0.4969594649
+   0.5769230769    0.6153846154    0.4969594649
+   0.7307692308    0.8461538462    0.4969594649
+   0.5000000000    0.0000000000    0.4969594649
+   0.6538461538    0.2307692308    0.4969594649
+   0.8076923077    0.4615384615    0.4969594649
+   0.9615384615    0.6923076923    0.4969594649
+   0.8846153846    0.0769230769    0.4969594649
+   0.0769230769    0.6153846154    0.3987837860
+   0.2307692308    0.8461538462    0.3987837860
+   0.0000000000    0.0000000000    0.3987837860
+   0.1538461538    0.2307692308    0.3987837860
+   0.3076923077    0.4615384615    0.3987837860
+   0.4615384615    0.6923076923    0.3987837860
+   0.6153846154    0.9230769231    0.3987837860
+   0.3846153846    0.0769230769    0.3987837860
+   0.5384615385    0.3076923077    0.3987837860
+   0.6923076923    0.5384615385    0.3987837860
+   0.8461538462    0.7692307692    0.3987837860
+   0.7692307692    0.1538461538    0.3987837860
+   0.9230769231    0.3846153846    0.3987837860
+   0.0000000000    0.5000000000    0.3006081070
+   0.1538461538    0.7307692308    0.3006081070
+   0.3076923077    0.9615384615    0.3006081070
+   0.0769230769    0.1153846154    0.3006081070
+   0.2307692308    0.3461538462    0.3006081070
+   0.3846153846    0.5769230769    0.3006081070
+   0.5384615385    0.8076923077    0.3006081070
+   0.4615384615    0.1923076923    0.3006081070
+   0.6153846154    0.4230769231    0.3006081070
+   0.7692307692    0.6538461538    0.3006081070
+   0.9230769231    0.8846153846    0.3006081070
+   0.6923076923    0.0384615385    0.3006081070
+   0.8461538462    0.2692307692    0.3006081070
+   0.0384615385    0.8076923077    0.2024324281
+   0.1153846154    0.4230769231    0.2024324281
+   0.2692307692    0.6538461538    0.2024324281
+   0.4230769231    0.8846153846    0.2024324281
+   0.1923076923    0.0384615385    0.2024324281
+   0.3461538462    0.2692307692    0.2024324281
+   0.5000000000    0.5000000000    0.2024324281
+   0.6538461538    0.7307692308    0.2024324281
+   0.8076923077    0.9615384615    0.2024324281
+   0.5769230769    0.1153846154    0.2024324281
+   0.7307692308    0.3461538462    0.2024324281
+   0.8846153846    0.5769230769    0.2024324281
+   0.9615384615    0.1923076923    0.2024324281
+```
+:::
+
+:::{dropdown} rutile_slab.vasp
+```text
+CalyData_O144Ti72
+1.0
+     14.085900000000       0.000000000000       0.000000000000
+      0.000000000000      14.085900000000       0.000000000000
+      0.000000000000       0.000000000000      25.654700000000
+O Ti
+144 72
+Direct
+   0.1017766667    0.1017766667    0.6102078761
+   0.1017766667    0.4351100000    0.6102078761
+   0.1017766667    0.7684433333    0.6102078761
+   0.4351100000    0.1017766667    0.6102078761
+   0.4351100000    0.4351100000    0.6102078761
+   0.4351100000    0.7684433333    0.6102078761
+   0.7684433333    0.1017766667    0.6102078761
+   0.7684433333    0.4351100000    0.6102078761
+   0.7684433333    0.7684433333    0.6102078761
+   0.2315566667    0.2315566667    0.6102078761
+   0.2315566667    0.5648900000    0.6102078761
+   0.2315566667    0.8982233333    0.6102078761
+   0.5648900000    0.2315566667    0.6102078761
+   0.5648900000    0.5648900000    0.6102078761
+   0.5648900000    0.8982233333    0.6102078761
+   0.8982233333    0.2315566667    0.6102078761
+   0.8982233333    0.5648900000    0.6102078761
+   0.8982233333    0.8982233333    0.6102078761
+   0.0648900000    0.2684433333    0.5508776170
+   0.0648900000    0.6017766667    0.5508776170
+   0.0648900000    0.9351100000    0.5508776170
+   0.3982233333    0.2684433333    0.5508776170
+   0.3982233333    0.6017766667    0.5508776170
+   0.3982233333    0.9351100000    0.5508776170
+   0.7315566667    0.2684433333    0.5508776170
+   0.7315566667    0.6017766667    0.5508776170
+   0.7315566667    0.9351100000    0.5508776170
+   0.2684433333    0.0648900000    0.5508776170
+   0.2684433333    0.3982233333    0.5508776170
+   0.2684433333    0.7315566667    0.5508776170
+   0.6017766667    0.0648900000    0.5508776170
+   0.6017766667    0.3982233333    0.5508776170
+   0.6017766667    0.7315566667    0.5508776170
+   0.9351100000    0.0648900000    0.5508776170
+   0.9351100000    0.3982233333    0.5508776170
+   0.9351100000    0.7315566667    0.5508776170
+   0.1017766667    0.1017766667    0.4915473578
+   0.1017766667    0.4351100000    0.4915473578
+   0.1017766667    0.7684433333    0.4915473578
+   0.4351100000    0.1017766667    0.4915473578
+   0.4351100000    0.4351100000    0.4915473578
+   0.4351100000    0.7684433333    0.4915473578
+   0.7684433333    0.1017766667    0.4915473578
+   0.7684433333    0.4351100000    0.4915473578
+   0.7684433333    0.7684433333    0.4915473578
+   0.2315566667    0.2315566667    0.4915473578
+   0.2315566667    0.5648900000    0.4915473578
+   0.2315566667    0.8982233333    0.4915473578
+   0.5648900000    0.2315566667    0.4915473578
+   0.5648900000    0.5648900000    0.4915473578
+   0.5648900000    0.8982233333    0.4915473578
+   0.8982233333    0.2315566667    0.4915473578
+   0.8982233333    0.5648900000    0.4915473578
+   0.8982233333    0.8982233333    0.4915473578
+   0.0648900000    0.2684433333    0.4322170986
+   0.0648900000    0.6017766667    0.4322170986
+   0.0648900000    0.9351100000    0.4322170986
+   0.3982233333    0.2684433333    0.4322170986
+   0.3982233333    0.6017766667    0.4322170986
+   0.3982233333    0.9351100000    0.4322170986
+   0.7315566667    0.2684433333    0.4322170986
+   0.7315566667    0.6017766667    0.4322170986
+   0.7315566667    0.9351100000    0.4322170986
+   0.2684433333    0.0648900000    0.4322170986
+   0.2684433333    0.3982233333    0.4322170986
+   0.2684433333    0.7315566667    0.4322170986
+   0.6017766667    0.0648900000    0.4322170986
+   0.6017766667    0.3982233333    0.4322170986
+   0.6017766667    0.7315566667    0.4322170986
+   0.9351100000    0.0648900000    0.4322170986
+   0.9351100000    0.3982233333    0.4322170986
+   0.9351100000    0.7315566667    0.4322170986
+   0.1017766667    0.1017766667    0.3728868394
+   0.1017766667    0.4351100000    0.3728868394
+   0.1017766667    0.7684433333    0.3728868394
+   0.4351100000    0.1017766667    0.3728868394
+   0.4351100000    0.4351100000    0.3728868394
+   0.4351100000    0.7684433333    0.3728868394
+   0.7684433333    0.1017766667    0.3728868394
+   0.7684433333    0.4351100000    0.3728868394
+   0.7684433333    0.7684433333    0.3728868394
+   0.2315566667    0.2315566667    0.3728868394
+   0.2315566667    0.5648900000    0.3728868394
+   0.2315566667    0.8982233333    0.3728868394
+   0.5648900000    0.2315566667    0.3728868394
+   0.5648900000    0.5648900000    0.3728868394
+   0.5648900000    0.8982233333    0.3728868394
+   0.8982233333    0.2315566667    0.3728868394
+   0.8982233333    0.5648900000    0.3728868394
+   0.8982233333    0.8982233333    0.3728868394
+   0.0648900000    0.2684433333    0.3135565803
+   0.0648900000    0.6017766667    0.3135565803
+   0.0648900000    0.9351100000    0.3135565803
+   0.3982233333    0.2684433333    0.3135565803
+   0.3982233333    0.6017766667    0.3135565803
+   0.3982233333    0.9351100000    0.3135565803
+   0.7315566667    0.2684433333    0.3135565803
+   0.7315566667    0.6017766667    0.3135565803
+   0.7315566667    0.9351100000    0.3135565803
+   0.2684433333    0.0648900000    0.3135565803
+   0.2684433333    0.3982233333    0.3135565803
+   0.2684433333    0.7315566667    0.3135565803
+   0.6017766667    0.0648900000    0.3135565803
+   0.6017766667    0.3982233333    0.3135565803
+   0.6017766667    0.7315566667    0.3135565803
+   0.9351100000    0.0648900000    0.3135565803
+   0.9351100000    0.3982233333    0.3135565803
+   0.9351100000    0.7315566667    0.3135565803
+   0.1017766667    0.1017766667    0.2542263211
+   0.1017766667    0.4351100000    0.2542263211
+   0.1017766667    0.7684433333    0.2542263211
+   0.4351100000    0.1017766667    0.2542263211
+   0.4351100000    0.4351100000    0.2542263211
+   0.4351100000    0.7684433333    0.2542263211
+   0.7684433333    0.1017766667    0.2542263211
+   0.7684433333    0.4351100000    0.2542263211
+   0.7684433333    0.7684433333    0.2542263211
+   0.2315566667    0.2315566667    0.2542263211
+   0.2315566667    0.5648900000    0.2542263211
+   0.2315566667    0.8982233333    0.2542263211
+   0.5648900000    0.2315566667    0.2542263211
+   0.5648900000    0.5648900000    0.2542263211
+   0.5648900000    0.8982233333    0.2542263211
+   0.8982233333    0.2315566667    0.2542263211
+   0.8982233333    0.5648900000    0.2542263211
+   0.8982233333    0.8982233333    0.2542263211
+   0.0648900000    0.2684433333    0.1948960619
+   0.0648900000    0.6017766667    0.1948960619
+   0.0648900000    0.9351100000    0.1948960619
+   0.3982233333    0.2684433333    0.1948960619
+   0.3982233333    0.6017766667    0.1948960619
+   0.3982233333    0.9351100000    0.1948960619
+   0.7315566667    0.2684433333    0.1948960619
+   0.7315566667    0.6017766667    0.1948960619
+   0.7315566667    0.9351100000    0.1948960619
+   0.2684433333    0.0648900000    0.1948960619
+   0.2684433333    0.3982233333    0.1948960619
+   0.2684433333    0.7315566667    0.1948960619
+   0.6017766667    0.0648900000    0.1948960619
+   0.6017766667    0.3982233333    0.1948960619
+   0.6017766667    0.7315566667    0.1948960619
+   0.9351100000    0.0648900000    0.1948960619
+   0.9351100000    0.3982233333    0.1948960619
+   0.9351100000    0.7315566667    0.1948960619
+   0.0000000000    0.0000000000    0.6102078761
+   0.0000000000    0.3333333333    0.6102078761
+   0.0000000000    0.6666666667    0.6102078761
+   0.3333333333    0.0000000000    0.6102078761
+   0.3333333333    0.3333333333    0.6102078761
+   0.3333333333    0.6666666667    0.6102078761
+   0.6666666667    0.0000000000    0.6102078761
+   0.6666666667    0.3333333333    0.6102078761
+   0.6666666667    0.6666666667    0.6102078761
+   0.1666666667    0.1666666667    0.5508776170
+   0.1666666667    0.5000000000    0.5508776170
+   0.1666666667    0.8333333333    0.5508776170
+   0.5000000000    0.1666666667    0.5508776170
+   0.5000000000    0.5000000000    0.5508776170
+   0.5000000000    0.8333333333    0.5508776170
+   0.8333333333    0.1666666667    0.5508776170
+   0.8333333333    0.5000000000    0.5508776170
+   0.8333333333    0.8333333333    0.5508776170
+   0.0000000000    0.0000000000    0.4915473578
+   0.0000000000    0.3333333333    0.4915473578
+   0.0000000000    0.6666666667    0.4915473578
+   0.3333333333    0.0000000000    0.4915473578
+   0.3333333333    0.3333333333    0.4915473578
+   0.3333333333    0.6666666667    0.4915473578
+   0.6666666667    0.0000000000    0.4915473578
+   0.6666666667    0.3333333333    0.4915473578
+   0.6666666667    0.6666666667    0.4915473578
+   0.1666666667    0.1666666667    0.4322170986
+   0.1666666667    0.5000000000    0.4322170986
+   0.1666666667    0.8333333333    0.4322170986
+   0.5000000000    0.1666666667    0.4322170986
+   0.5000000000    0.5000000000    0.4322170986
+   0.5000000000    0.8333333333    0.4322170986
+   0.8333333333    0.1666666667    0.4322170986
+   0.8333333333    0.5000000000    0.4322170986
+   0.8333333333    0.8333333333    0.4322170986
+   0.0000000000    0.0000000000    0.3728868394
+   0.0000000000    0.3333333333    0.3728868394
+   0.0000000000    0.6666666667    0.3728868394
+   0.3333333333    0.0000000000    0.3728868394
+   0.3333333333    0.3333333333    0.3728868394
+   0.3333333333    0.6666666667    0.3728868394
+   0.6666666667    0.0000000000    0.3728868394
+   0.6666666667    0.3333333333    0.3728868394
+   0.6666666667    0.6666666667    0.3728868394
+   0.1666666667    0.1666666667    0.3135565803
+   0.1666666667    0.5000000000    0.3135565803
+   0.1666666667    0.8333333333    0.3135565803
+   0.5000000000    0.1666666667    0.3135565803
+   0.5000000000    0.5000000000    0.3135565803
+   0.5000000000    0.8333333333    0.3135565803
+   0.8333333333    0.1666666667    0.3135565803
+   0.8333333333    0.5000000000    0.3135565803
+   0.8333333333    0.8333333333    0.3135565803
+   0.0000000000    0.0000000000    0.2542263211
+   0.0000000000    0.3333333333    0.2542263211
+   0.0000000000    0.6666666667    0.2542263211
+   0.3333333333    0.0000000000    0.2542263211
+   0.3333333333    0.3333333333    0.2542263211
+   0.3333333333    0.6666666667    0.2542263211
+   0.6666666667    0.0000000000    0.2542263211
+   0.6666666667    0.3333333333    0.2542263211
+   0.6666666667    0.6666666667    0.2542263211
+   0.1666666667    0.1666666667    0.1948960619
+   0.1666666667    0.5000000000    0.1948960619
+   0.1666666667    0.8333333333    0.1948960619
+   0.5000000000    0.1666666667    0.1948960619
+   0.5000000000    0.5000000000    0.1948960619
+   0.5000000000    0.8333333333    0.1948960619
+   0.8333333333    0.1666666667    0.1948960619
+   0.8333333333    0.5000000000    0.1948960619
+   0.8333333333    0.8333333333    0.1948960619
+```
+:::
+
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_combine/rutile_anatase/output_file/`):
+
+```text
+.
+├── combine.toml
+├── run_cli.sh
+├── anatase_slab.vasp
+├── rutile_slab.vasp
+├── rutile_anatase_interface.vasp  # stacked interface
+└── wb-combine.toml                # summary of the parameters used
+```
+
+#### MoS2_MXene: stack monolayer MoS2 on Mo2CO2
+
+Both inputs are single layers with vacuum.
+
+Input files (`example/cli_combine/MoS2_MXene/input_file/`):
+
+```text
+.
+├── combine.toml
+├── run_cli.sh
+├── Mo2CO2.vasp
+└── MoS2.vasp
+```
+
+`combine.toml`:
 
 ```toml
 # Example: vertical stacking of monolayer MoS2 on Mo2CO2 MXene
@@ -930,4 +2172,114 @@ OutputFile   = "MoS2_MXene_interface.vasp"
 OutputFormat = "vasp"
 ```
 
-Output: `MoS2_MXene_interface.vasp`, `wb-combine.toml`.
+`run_cli.sh`:
+
+```bash
+#! /bin/bash
+
+calypso.x combine --input combine.toml
+```
+
+:::{dropdown} Mo2CO2.vasp
+```text
+CalyData_C9O18Mo18
+1.0
+      4.307085232441       7.460090455117       0.000000000000
+     -4.307085232441       7.460090455117       0.000000000000
+      0.000000000000       0.000000000000      20.192718999706
+C O Mo
+9 18 18
+Direct
+   0.0000000000    0.0000000000    0.3761929981
+   0.0000000000    0.3333333333    0.3761929981
+   0.0000000000    0.6666666667    0.3761929981
+   0.3333333333    0.0000000000    0.3761929981
+   0.3333333333    0.3333333333    0.3761929981
+   0.3333333333    0.6666666667    0.3761929981
+   0.6666666667    0.0000000000    0.3761929981
+   0.6666666667    0.3333333333    0.3761929981
+   0.6666666667    0.6666666667    0.3761929981
+   0.0000000000    0.0000000000    0.5047719923
+   0.0000000000    0.3333333333    0.5047719923
+   0.0000000000    0.6666666667    0.5047719923
+   0.3333333333    0.0000000000    0.5047719923
+   0.3333333333    0.3333333333    0.5047719923
+   0.3333333333    0.6666666667    0.5047719923
+   0.6666666667    0.0000000000    0.5047719923
+   0.6666666667    0.3333333333    0.5047719923
+   0.6666666667    0.6666666667    0.5047719923
+   0.0000000000    0.0000000000    0.2476140038
+   0.0000000000    0.3333333333    0.2476140038
+   0.0000000000    0.6666666667    0.2476140038
+   0.3333333333    0.0000000000    0.2476140038
+   0.3333333333    0.3333333333    0.2476140038
+   0.3333333333    0.6666666667    0.2476140038
+   0.6666666667    0.0000000000    0.2476140038
+   0.6666666667    0.3333333333    0.2476140038
+   0.6666666667    0.6666666667    0.2476140038
+   0.1111111111    0.1111111111    0.4443944560
+   0.1111111111    0.4444444444    0.4443944560
+   0.1111111111    0.7777777778    0.4443944560
+   0.4444444444    0.1111111111    0.4443944560
+   0.4444444444    0.4444444444    0.4443944560
+   0.4444444444    0.7777777778    0.4443944560
+   0.7777777778    0.1111111111    0.4443944560
+   0.7777777778    0.4444444444    0.4443944560
+   0.7777777778    0.7777777778    0.4443944560
+   0.2222222222    0.2222222222    0.3079915402
+   0.2222222222    0.5555555556    0.3079915402
+   0.2222222222    0.8888888889    0.3079915402
+   0.5555555556    0.2222222222    0.3079915402
+   0.5555555556    0.5555555556    0.3079915402
+   0.5555555556    0.8888888889    0.3079915402
+   0.8888888889    0.2222222222    0.3079915402
+   0.8888888889    0.5555555556    0.3079915402
+   0.8888888889    0.8888888889    0.3079915402
+```
+:::
+
+:::{dropdown} MoS2.vasp
+```text
+CalyData_S14Mo7
+1.0
+      6.324200153348       5.476917991417       0.000000000000
+     -1.581050038337       8.215376987125       0.000000000000
+      0.000000000000       0.000000000000      18.137613810077
+S Mo
+14 7
+Direct
+   0.0952380952    0.3809523810    0.4486595588
+   0.5238095238    0.0952380952    0.4486595588
+   0.3809523810    0.5238095238    0.4486595588
+   0.2380952381    0.9523809524    0.4486595588
+   0.8095238095    0.2380952381    0.4486595588
+   0.6666666667    0.6666666667    0.4486595588
+   0.9523809524    0.8095238095    0.4486595588
+   0.0952380952    0.3809523810    0.2756702206
+   0.5238095238    0.0952380952    0.2756702206
+   0.3809523810    0.5238095238    0.2756702206
+   0.2380952381    0.9523809524    0.2756702206
+   0.8095238095    0.2380952381    0.2756702206
+   0.6666666667    0.6666666667    0.2756702206
+   0.9523809524    0.8095238095    0.2756702206
+   0.0476190476    0.1904761905    0.3621648897
+   0.3333333333    0.3333333333    0.3621648897
+   0.1904761905    0.7619047619    0.3621648897
+   0.7619047619    0.0476190476    0.3621648897
+   0.6190476190    0.4761904762    0.3621648897
+   0.4761904762    0.9047619048    0.3621648897
+   0.9047619048    0.6190476190    0.3621648897
+```
+:::
+
+Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_combine/MoS2_MXene/output_file/`):
+
+```text
+.
+├── combine.toml
+├── run_cli.sh
+├── Mo2CO2.vasp
+├── MoS2.vasp
+├── MoS2_MXene_interface.vasp  # stacked interface
+└── wb-combine.toml            # summary of the parameters used
+```

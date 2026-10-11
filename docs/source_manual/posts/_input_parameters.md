@@ -78,7 +78,6 @@ Inputs and outputs.
       - [**`TranslationLimitA`**](#translationlimita)
       - [**`TranslationLimitB`**](#translationlimitb)
       - [**`CoordinateNumber`**](#coordinatenumber)
-      - [**`LimitGrowth`**](#limitgrowth)
     - [Parameters for optimization in `CALYPSO.OPT` block](#parameters-for-optimization-in-calypsoopt-block)
       - [**`DFTInputPath`**](#dftinputpath)
       - [**`JobFlow`**](#jobflow)
@@ -1102,19 +1101,6 @@ CoordinateNumber = [['Ti', 'Ti', 0, 0, 2.5, 2.5],
 ```
 
 There is no default value. You must supply this parameter when `RandScheme = 2`.
-
-#### **`LimitGrowth`**
-
-```text
-LimitGrowth = bool
-```
-
-Only used with `RandScheme = 2`. If true, each new interface atom is bonded to a
-substrate surface atom that has not reached its `CoordinateNumber` yet, so the
-interface grows from the slab surfaces. After 100 failed tries the normal growth
-(from substrate and interface atoms) is used.
-
-Default: False
 
 ### Parameters for optimization in `CALYPSO.OPT` block
 
