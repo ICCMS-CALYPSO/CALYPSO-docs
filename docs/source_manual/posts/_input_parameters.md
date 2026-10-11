@@ -29,72 +29,73 @@ Inputs and outputs.
       - [**`Temperature`**](#temperature)
     - [Parameters for generator in `CALYPSO.GENERATOR` block](#parameters-for-generator-in-calypsogenerator-block)
       - [basic parameters for each type of crystal structure prediction](#basic-parameters-for-each-type-of-crystal-structure-prediction)
-      - [**`FormulaUnit`**](#formulaunit)
-      - [**`MaxNumAtom`**](#maxnumatom)
-      - [**`VolumeUnit`**](#volumeunit)
-      - [**`DistanceOfIon`**](#distanceofion)
-      - [**`SpaceGroup`**](#spacegroup)
-      - [**`PrototypePath`**](#prototypepath)
-      - [**`PrototypeRatio`**](#prototyperatio)
+        - [**`FormulaUnit`**](#formulaunit)
+        - [**`MaxNumAtom`**](#maxnumatom)
+        - [**`VolumeUnit`**](#volumeunit)
+        - [**`DistanceOfIon`**](#distanceofion)
+        - [**`SpaceGroup`**](#spacegroup)
+        - [**`PrototypePath`**](#prototypepath)
+        - [**`PrototypeRatio`**](#prototyperatio)
       - [bulk detail parameters](#bulk-detail-parameters)
-      - [**`LengthMaxRatio`**](#lengthmaxratio)
-      - [**`LengthMinRatio`**](#lengthminratio)
+        - [**`LengthMaxRatio`**](#lengthmaxratio)
+        - [**`LengthMinRatio`**](#lengthminratio)
       - [Extra Parameters for layer structure prediction](#extra-parameters-for-layer-structure-prediction)
-      - [**`Thicknesses`**](#thicknesses)
-      - [**`Area`**](#area)
-      - [**`Gaps`**](#gaps)
+        - [**`Thicknesses`**](#thicknesses)
+        - [**`Area`**](#area)
+        - [**`Gaps`**](#gaps)
       - [Extra Parameters for cluster structure prediction](#extra-parameters-for-cluster-structure-prediction)
-      - [**`Vacancy`**](#vacancy)
-      - [**`ClusterType`**](#clustertype)
+        - [**`Vacancy`**](#vacancy)
+        - [**`ClusterType`**](#clustertype)
       - [Extra Parameters for molecule structure prediction](#extra-parameters-for-molecule-structure-prediction)
-      - [**`MoleculesPath`**](#moleculespath)
+        - [**`MoleculesPath`**](#moleculespath)
       - [Extra Parameters for surface structure prediction](#extra-parameters-for-surface-structure-prediction)
-      - [**`SurfaceGenerationMode`**](#surfacegenerationmode)
-      - [**`FormulaUnit`** (surface)](#formulaunit-surface)
-      - [**`DistanceOfIon`** (surface)](#distanceofion-surface)
-      - [**`AdsorptionStyle`**](#adsorptionstyle)
-      - [**`AdsorptionSymmetry`**](#adsorptionsymmetry)
-      - [**`SubstratePath`**](#substratepath)
-      - [**`Supercell`**](#supercell)
-      - [**`RangeOfZAxis`**](#rangeofzaxis)
-      - [**`FixSiteC`**](#fixsitec)
-      - [**`PointPath`**](#pointpath)
-      - [**`MoleculesPath`** (surface)](#moleculespath-surface)
-      - [**`MolRotate`**](#molrotate)
-      - [**`TranslateAtomPosition`**](#translateatomposition)
-      - [**`RotateAtomPosition`**](#rotateatomposition)
-      - [**`[CALYPSO.GENERATOR.CLEAVE]`**](#calypsogeneratorcleave)
-      - [**`[CALYPSO.GENERATOR.2D]`**](#calypsogenerator2d)
-      - [**`[CALYPSO.GENERATOR.CLUSTER]`**](#calypsogeneratorcluster)
+        - [**`SurfaceGenerationMode`**](#surfacegenerationmode)
+        - [**`FormulaUnit`** (surface)](#formulaunit-surface)
+        - [**`DistanceOfIon`** (surface)](#distanceofion-surface)
+        - [**`AdsorptionStyle`**](#adsorptionstyle)
+        - [**`AdsorptionSymmetry`**](#adsorptionsymmetry)
+        - [**`SubstratePath`**](#substratepath)
+        - [**`Supercell`**](#supercell)
+        - [**`RangeOfZAxis`**](#rangeofzaxis)
+        - [**`FixSiteC`**](#fixsitec)
+        - [**`PointPath`**](#pointpath)
+        - [**`MoleculesPath`** (surface)](#moleculespath-surface)
+        - [**`MolRotate`**](#molrotate)
+        - [**`TranslateAtomPosition`**](#translateatomposition)
+        - [**`RotateAtomPosition`**](#rotateatomposition)
+        - [**`[CALYPSO.GENERATOR.CLEAVE]`**](#calypsogeneratorcleave)
+        - [**`[CALYPSO.GENERATOR.2D]`**](#calypsogenerator2d)
+        - [**`[CALYPSO.GENERATOR.CLUSTER]`**](#calypsogeneratorcluster)
       - [Extra Parameters for interface structure prediction](#extra-parameters-for-interface-structure-prediction)
-      - [**`Substrate1Path`**](#substrate1path)
-      - [**`Substrate2Path`**](#substrate2path)
-      - [**`InterfaceThickness`**](#interfacethickness)
-      - [**`ForbiThickness`**](#forbithickness)
-      - [**`InternalThickness`**](#internalthickness)
-      - [**`RandScheme`**](#randscheme)
-      - [**`TwinInterface`**](#twininterface)
-      - [**`InterfaceTranslation`**](#interfacetranslation)
-      - [**`TranslationLimitA`**](#translationlimita)
-      - [**`TranslationLimitB`**](#translationlimitb)
-      - [**`CoordinateNumber`**](#coordinatenumber)
+        - [**`Substrate1Path`**](#substrate1path)
+        - [**`Substrate2Path`**](#substrate2path)
+        - [**`InterfaceThickness`**](#interfacethickness)
+        - [**`ForbiThickness`**](#forbithickness)
+        - [**`InternalThickness`**](#internalthickness)
+        - [**`RandScheme`**](#randscheme)
+        - [**`TwinInterface`**](#twininterface)
+        - [**`InterfaceTranslation`**](#interfacetranslation)
+        - [**`TranslationLimitA`**](#translationlimita)
+        - [**`TranslationLimitB`**](#translationlimitb)
+        - [**`CoordinateNumber`**](#coordinatenumber)
     - [Parameters for optimization in `CALYPSO.OPT` block](#parameters-for-optimization-in-calypsoopt-block)
-      - [**`DFTInputPath`**](#dftinputpath)
-      - [**`JobFlow`**](#jobflow)
-      - [**`PpMap`**](#ppmap)
-      - [**`ShareFiles`**](#sharefiles)
-      - [**`CustomizableScript`**](#customizablescript)
-      - [**`RunCustomizableScriptCMD`**](#runcustomizablescriptcmd)
+      - [basic parameters for each calculator](#basic-parameters-for-each-calculator)
+        - [**`DFTInputPath`**](#dftinputpath)
+        - [**`JobFlow`**](#jobflow)
+        - [**`PpMap`**](#ppmap)
+        - [**`ShareFiles`**](#sharefiles)
+        - [**`CustomizableScript`**](#customizablescript)
+        - [**`RunCustomizableScriptCMD`**](#runcustomizablescriptcmd)
       - [Extra Parameters MLP calculator](#extra-parameters-mlp-calculator)
-      - [**`MLPType`**](#mlptype)
-      - [**`MLPKwargs`**](#mlpkwargs)
-      - [**`OptAlgo`**](#optalgo)
-      - [**`OptStep`**](#optstep)
-      - [**`TrajFile`**](#trajfile)
-      - [**`Pstress`**](#pstress)
-      - [**`Fmax`**](#fmax)
-      - [**`MLPKeepSym`**](#mlpkeepsym)
-      - [**`UcfMask`**](#ucfmask)
+        - [**`MLPType`**](#mlptype)
+        - [**`MLPKwargs`**](#mlpkwargs)
+        - [**`OptAlgo`**](#optalgo)
+        - [**`OptStep`**](#optstep)
+        - [**`TrajFile`**](#trajfile)
+        - [**`Pstress`**](#pstress)
+        - [**`Fmax`**](#fmax)
+        - [**`MLPKeepSym`**](#mlpkeepsym)
+        - [**`UcfMask`**](#ucfmask)
     - [Parameters for dispatcher in `CALYPSO.DISPATCHER` block](#parameters-for-dispatcher-in-calypsodispatcher-block)
       - [**`MachineList`**](#machinelist)
       - [**`TimeInterval`**](#timeinterval)
@@ -127,7 +128,6 @@ Inputs and outputs.
       - [**`envs`**](#envs)
       - [**`additional_head_settings`**](#additional_head_settings)
       - [**`scheduler_envs`**](#scheduler_envs)
-
 
 ## CALYPSO Inputs —— toml
 
@@ -399,7 +399,7 @@ Default: 300
 
 #### basic parameters for each type of crystal structure prediction
 
-#### **`FormulaUnit`**
+##### **`FormulaUnit`**
 
 ```text
 FormulaUnit = list of string
@@ -411,7 +411,7 @@ In Crystal Structure prediction, the length of FormulaUnit is 1. But for layer s
 
 There is no default. you must define it.
 
-#### **`MaxNumAtom`**
+##### **`MaxNumAtom`**
 
 ```text
 MaxNumAtom = integer
@@ -421,7 +421,7 @@ The maximal number of atoms allowed in the simulation cell.
 
 Default: 100
 
-#### **`VolumeUnit`**
+##### **`VolumeUnit`**
 
 ```text
 VolumeUnit = dict of string and int
@@ -437,7 +437,7 @@ The key of dict in toml is no need to add quote for string.
 
 Default: {} <=> (1.3*(4/3)π(covalent radii)^3)
 
-#### **`DistanceOfIon`**
+##### **`DistanceOfIon`**
 
 ```text
 DistanceOfIon = list or dict
@@ -449,7 +449,7 @@ for example, `DistanceOfIon = [["X", "Li", "H", "N"], ["Li",  1.0, 1.0,  1.0], [
 
 Default: {} <=> covalent radii
 
-#### **`SpaceGroup`**
+##### **`SpaceGroup`**
 
 ```text
 SpaceGroup = list of int and string
@@ -474,7 +474,7 @@ The rule of specific space group is :
 
 Default: [1, "2-210", "211:231:1"]
 
-#### **`PrototypePath`**
+##### **`PrototypePath`**
 ```text
 PrototypePath = list of string
 ```
@@ -485,7 +485,7 @@ For example, `PrototypePath = ["path/to/vasp/poscar"]`. In the very beginning, t
 
 There is no default value. You must supply this variable if you want to use it.
 
-#### **`PrototypeRatio`**
+##### **`PrototypeRatio`**
 ```text
 PrototypeRatio = float
 ```
@@ -496,7 +496,7 @@ Default: 0.0
 
 #### bulk detail parameters
 
-#### **`LengthMaxRatio`**
+##### **`LengthMaxRatio`**
 ```text
 LengthMaxRatio = float
 ```
@@ -505,7 +505,7 @@ The max ratio of the length of a, b, c.
 
 Default: 5.0
 
-#### **`LengthMinRatio`**
+##### **`LengthMinRatio`**
 ```text
 LengthMinRatio = float
 ```
@@ -516,7 +516,7 @@ Default: 1.0
 
 #### Extra Parameters for layer structure prediction
 
-#### **`Thicknesses`**
+##### **`Thicknesses`**
 
 ```text
 Thicknesses = list of float
@@ -528,7 +528,7 @@ The length of `Thicknesses` is equal to the length of `FormulaUnit`
 
 There is no default value. You must supply this variable if `IType = 4`.
 
-#### **`Area`**
+##### **`Area`**
 
 ```text
 Area = float
@@ -541,7 +541,7 @@ The program will automatically generate an estimated area by using the ionic rad
 
 There is no default value. You must supply this variable if `IType = 4`.
 
-#### **`Gaps`**
+##### **`Gaps`**
 
 ```text
 Gaps = list of float
@@ -555,7 +555,7 @@ There is no default value. You must supply this variable if `IType = 4`.
 
 #### Extra Parameters for cluster structure prediction
 
-#### **`Vacancy`**
+##### **`Vacancy`**
 
 ```text
 Vacancy = list of float
@@ -573,7 +573,7 @@ optimization for large systems since computationally VASP calculations are very 
 
 Default: [10.0 10.0 10.0]
 
-#### **`ClusterType`**
+##### **`ClusterType`**
 
 ```text
 ClusterType = string 
@@ -587,7 +587,7 @@ Default: normal
 
 #### Extra Parameters for molecule structure prediction
 
-#### **`MoleculesPath`**
+##### **`MoleculesPath`**
 
 ```text
 MoleculesPath = dict of string
@@ -607,7 +607,7 @@ parameters of the ordinary adsorption mode come first, followed by the
 `[CALYPSO.GENERATOR.CLEAVE]`, `[CALYPSO.GENERATOR.2D]` and
 `[CALYPSO.GENERATOR.CLUSTER]` blocks. Complete inputs are given in the case studies.
 
-#### **`SurfaceGenerationMode`**
+##### **`SurfaceGenerationMode`**
 
 ```text
 SurfaceGenerationMode = "Adsorption" | "2D" | "Cluster"
@@ -631,7 +631,7 @@ For `2D` and `Cluster`:
 
 Default: `Adsorption`
 
-#### **`FormulaUnit`** (surface)
+##### **`FormulaUnit`** (surface)
 
 ```text
 FormulaUnit = list of string
@@ -646,7 +646,7 @@ groups and molecules in `{}` and defined in `MoleculesPath`.
 | Both sides      | `FormulaUnit = ["(H)2", "{OH}1"]` (upper, lower)           |
 | Multi-surface   | `FormulaUnit = [["(H)2{OH}1", ""], ["(H)3", "{OH}1"], ["", "(O)2"]]`, one `[upper, lower]` pair per substrate slab, see `SubstratePath` |
 
-#### **`DistanceOfIon`** (surface)
+##### **`DistanceOfIon`** (surface)
 
 ```text
 DistanceOfIon = list
@@ -666,7 +666,7 @@ DistanceOfIon = [["X", "C", "H", "C"],
 The table must be symmetric. Missing atom-atom pairs are estimated from covalent
 radii; pairs with a molecule must be given.
 
-#### **`AdsorptionStyle`**
+##### **`AdsorptionStyle`**
 
 ```text
 AdsorptionStyle = integer or string
@@ -679,7 +679,7 @@ AdsorptionStyle = integer or string
 
 Default: 1
 
-#### **`AdsorptionSymmetry`**
+##### **`AdsorptionSymmetry`**
 
 ```text
 AdsorptionSymmetry = bool
@@ -692,7 +692,7 @@ substrate and the units already placed.
 
 Default: True
 
-#### **`SubstratePath`**
+##### **`SubstratePath`**
 
 ```text
 SubstratePath = string
@@ -721,7 +721,7 @@ between two neighboring slabs cannot hold their adsorbates.
 
 There is no default value.
 
-#### **`Supercell`**
+##### **`Supercell`**
 
 ```text
 Supercell = list of list of integer
@@ -731,7 +731,7 @@ Supercell = list of list of integer
 
 Default: [[1, 0], [0, 1]]
 
-#### **`RangeOfZAxis`**
+##### **`RangeOfZAxis`**
 
 ```text
 RangeOfZAxis = list of float
@@ -751,7 +751,7 @@ lowest seed atom.
 
 Default: [1.7, 1.2]
 
-#### **`FixSiteC`**
+##### **`FixSiteC`**
 
 ```text
 FixSiteC = bool
@@ -764,7 +764,7 @@ FixSiteC = bool
 
 Default: False
 
-#### **`PointPath`**
+##### **`PointPath`**
 
 ```text
 PointPath = string
@@ -817,7 +817,7 @@ Direct
 
 There is no default value.
 
-#### **`MoleculesPath`** (surface)
+##### **`MoleculesPath`** (surface)
 
 ```text
 MoleculesPath = dict of string
@@ -832,7 +832,7 @@ group is read from `OH.xyz` and the `H2O` molecule from `H2O.xyz`.
 
 Default: {}
 
-#### **`MolRotate`**
+##### **`MolRotate`**
 
 ```text
 MolRotate = bool
@@ -845,7 +845,7 @@ MolRotate = bool
 
 Default: False
 
-#### **`TranslateAtomPosition`**
+##### **`TranslateAtomPosition`**
 
 ```text
 TranslateAtomPosition = bool
@@ -856,7 +856,7 @@ Apply a random in-plane translation to the symmetric adsorption sites. Only used
 
 Default: True
 
-#### **`RotateAtomPosition`**
+##### **`RotateAtomPosition`**
 
 ```text
 RotateAtomPosition = bool
@@ -868,7 +868,7 @@ used with `AdsorptionSymmetry = True`.
 
 Default: True
 
-#### **`[CALYPSO.GENERATOR.CLEAVE]`**
+##### **`[CALYPSO.GENERATOR.CLEAVE]`**
 
 Used when `SubstratePath = "Automatic"`. The keys are the TOML keys of the `cleave`
 subcommand (see [calypso.x subcommands](_calypso_subcommands.md)) and are
@@ -888,7 +888,7 @@ IrreducibleAtoms = [['Ag', 0.0, 0.0, 0.0]]
 CapBondsWithH = false
 ```
 
-#### **`[CALYPSO.GENERATOR.2D]`**
+##### **`[CALYPSO.GENERATOR.2D]`**
 
 Options of the 2D layer, used only with `SurfaceGenerationMode = "2D"`.
 
@@ -911,7 +911,7 @@ SpaceGroup = ["1-80"]
 Gaps = [15]
 ```
 
-#### **`[CALYPSO.GENERATOR.CLUSTER]`**
+##### **`[CALYPSO.GENERATOR.CLUSTER]`**
 
 Options of the cluster, used only with `SurfaceGenerationMode = "Cluster"`.
 
@@ -943,7 +943,7 @@ are mapped onto the in-plane lattice of substrate 1, i.e. substrate 2 is straine
 The c axis is rebuilt from the slab thicknesses and `InterfaceThickness`. Use
 the `mismatch` subcommand to obtain two lattice-matched slabs.
 
-#### **`Substrate1Path`**
+##### **`Substrate1Path`**
 
 ```text
 Substrate1Path = string
@@ -955,7 +955,7 @@ optimization.
 
 There is no default value.
 
-#### **`Substrate2Path`**
+##### **`Substrate2Path`**
 
 ```text
 Substrate2Path = string
@@ -967,7 +967,7 @@ slab.
 
 There is no default value.
 
-#### **`InterfaceThickness`**
+##### **`InterfaceThickness`**
 
 ```text
 InterfaceThickness = float or [float, float]
@@ -978,7 +978,7 @@ lets PSO optimize it within the range.
 
 Default: [3.0, 3.0]
 
-#### **`ForbiThickness`**
+##### **`ForbiThickness`**
 
 ```text
 ForbiThickness = float
@@ -988,7 +988,7 @@ Gap (angstrom) kept free of interface atoms next to each slab surface.
 
 Default: 0.0
 
-#### **`InternalThickness`**
+##### **`InternalThickness`**
 
 ```text
 InternalThickness = float
@@ -999,7 +999,7 @@ of `ForbiThickness`.
 
 Default: 0.0
 
-#### **`RandScheme`**
+##### **`RandScheme`**
 
 ```text
 RandScheme = integer
@@ -1013,7 +1013,7 @@ RandScheme = integer
 
 Default: 1
 
-#### **`TwinInterface`**
+##### **`TwinInterface`**
 
 ```text
 TwinInterface = integer
@@ -1027,7 +1027,7 @@ TwinInterface = integer
 
 Default: 0
 
-#### **`InterfaceTranslation`**
+##### **`InterfaceTranslation`**
 
 ```text
 InterfaceTranslation = string
@@ -1044,7 +1044,7 @@ Rigid in-plane translation of the upper slab (substrate 2).
 
 Default: `""`
 
-#### **`TranslationLimitA`**
+##### **`TranslationLimitA`**
 
 ```text
 TranslationLimitA = [float, float]
@@ -1059,7 +1059,7 @@ used and the one not given is `[0.0, 1.5]`.
 
 Default: not set (whole *a* length)
 
-#### **`TranslationLimitB`**
+##### **`TranslationLimitB`**
 
 ```text
 TranslationLimitB = [float, float]
@@ -1070,7 +1070,7 @@ Range `[min, max]` (angstrom) of the translation along *b*, used when
 
 Default: not set (whole *b* length)
 
-#### **`CoordinateNumber`**
+##### **`CoordinateNumber`**
 
 ```text
 CoordinateNumber = list of list
@@ -1104,7 +1104,9 @@ There is no default value. You must supply this parameter when `RandScheme = 2`.
 
 ### Parameters for optimization in `CALYPSO.OPT` block
 
-#### **`DFTInputPath`**
+#### basic parameters for each calculator
+
+##### **`DFTInputPath`**
 
 ```text
 DFTInputPath = string
@@ -1116,7 +1118,7 @@ If one using MLP with model file, it also should be saved in here.
 
 Default: "./"
 
-#### **`JobFlow`**
+##### **`JobFlow`**
 
 ```text
 JobFlow = list of string
@@ -1126,7 +1128,7 @@ Define the sequence of calculation to be conducted. The number of input files sh
 
 default: ["opt", "opt", "opt"]
 
-#### **`PpMap`**
+##### **`PpMap`**
 
 ```text
 PpMap = list of string
@@ -1138,7 +1140,7 @@ For example, `PpMap = {Li: "POTCAR_Li", Mg: "mmm"}`
 
 There is no default value. One must set it manually.
 
-#### **`ShareFiles`**
+##### **`ShareFiles`**
 
 ```text
 ShareFiles = list of string
@@ -1152,7 +1154,7 @@ Another example is that one can put the path of model here if using mlp as calcu
 
 Default: []
 
-#### **`CustomizableScript`**
+##### **`CustomizableScript`**
 
 ```text
 CustomizableScript: str
@@ -1167,7 +1169,7 @@ scripts, use `MLPType = "custom"`; see [User-provided MLP optimization scripts](
 
 Default: None
 
-#### **`RunCustomizableScriptCMD`**
+##### **`RunCustomizableScriptCMD`**
 
 ```text
 RunCustomizableScriptCMD: str
@@ -1185,7 +1187,7 @@ its path is not stable, but the script name is stable.
 
 #### Extra Parameters MLP calculator
 
-#### **`MLPType`**
+##### **`MLPType`**
 
 ```text
 MLPType = "dp"
@@ -1210,7 +1212,7 @@ Choose which type of mlp will be used.
 
 There is no default value. One must set it manually.
 
-#### **`MLPKwargs`**
+##### **`MLPKwargs`**
 
 ```text
 MLPKwargs = {"model"="M3GNet-MP-2021.2.8-PES"}
@@ -1277,7 +1279,7 @@ model filename must also avoid known workflow inputs, outputs, logs and scripts
 name is rejected before job preparation. This does not change the existing VASP
 input requirements or introduce a new calculation workflow.
 
-#### **`OptAlgo`**
+##### **`OptAlgo`**
 
 ```text
 OptAlgo = string
@@ -1291,7 +1293,7 @@ The algorithm of optimization.
 
 Default: "LBFGS"
 
-#### **`OptStep`**
+##### **`OptStep`**
 
 ```text
 OptStep = int
@@ -1301,7 +1303,7 @@ The number of step of optimization.
 
 Default: 1000
 
-#### **`TrajFile`**
+##### **`TrajFile`**
 
 ```text
 TrajFile = string
@@ -1311,7 +1313,7 @@ The filename of optimization trajectory.
 
 Default: traj.traj
 
-#### **`Pstress`**
+##### **`Pstress`**
 
 ```text
 Pstress = float
@@ -1322,7 +1324,7 @@ in GPa
 
 Default: 0.0
 
-#### **`Fmax`**
+##### **`Fmax`**
 
 ```text
 Fmax = float
@@ -1332,7 +1334,7 @@ The coverage condition. The optimization will stop when all the force of each at
 
 Default: 0.1
 
-#### **`MLPKeepSym`**
+##### **`MLPKeepSym`**
 
 ```text
 MKPKeepSym = bool
@@ -1347,7 +1349,7 @@ Take no effect if any atoms or lattice is fixed. e.g. `selective dynamics` [in s
 :::
 
 
-#### **`UcfMask`**
+##### **`UcfMask`**
 
 None or a list of booleans, indicating which of the six independent components of the strain are relaxed.
 
