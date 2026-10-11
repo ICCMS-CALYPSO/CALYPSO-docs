@@ -1,39 +1,50 @@
 # calypso.x subcommands
 
-- [supercell — expand a cell into a supercell](#supercell)
-  - [Usage](#supercell-usage)
-  - [Parameters](#supercell-parameters)
-  - [Output files](#supercell-output-files)
-  - [Examples](#supercell-examples)
-- [cleave — generate a surface slab](#cleave)
-  - [Usage](#cleave-usage)
-  - [Parameters](#cleave-parameters)
-  - [Input files](#cleave-input-files)
-  - [Output files](#cleave-output-files)
-  - [Warnings (non-fatal)](#cleave-warnings)
-  - [Errors (fatal — program stops)](#cleave-errors)
-  - [How H passivation works (`CapBondsWithH`)](#cleave-how-h-passivation-works)
-  - [Examples](#cleave-examples)
-- [mismatch — search lattice-matched interfaces](#mismatch)
-  - [Usage](#mismatch-usage)
-  - [Parameters](#mismatch-parameters)
-  - [TOML input](#mismatch-toml-input)
-  - [Output files](#mismatch-output-files)
-  - [Notes on `FlipSlab1Z`](#mismatch-notes-on-flipslab1z)
-  - [Errors (fatal — program stops)](#mismatch-errors)
-  - [Examples](#mismatch-examples)
-- [combine — stack two slabs into a heterostructure](#combine)
-  - [Usage](#combine-usage)
-  - [Parameters](#combine-parameters)
-  - [TOML input](#combine-toml-input)
-  - [Output files](#combine-output-files)
-  - [Notes on `FlipSlab1Z`](#combine-notes-on-flipslab1z)
-  - [Errors (fatal — program stops)](#combine-errors)
-  - [Examples](#combine-examples)
+Utility subcommands of `calypso.x`, run as `calypso.x <subcommand> [options]`.
 
----
+- [calypso.x subcommands](#calypsox-subcommands)
+  - [supercell — expand a cell into a supercell](#supercell--expand-a-cell-into-a-supercell)
+    - [supercell: Usage](#supercell-usage)
+    - [supercell: Parameters](#supercell-parameters)
+    - [supercell: Output files](#supercell-output-files)
+    - [supercell: Examples](#supercell-examples)
+      - [graphene: 2x2 in-plane supercell](#graphene-2x2-in-plane-supercell)
+      - [H2O: 2x2x2 supercell](#h2o-2x2x2-supercell)
+  - [cleave — generate a surface slab](#cleave--generate-a-surface-slab)
+    - [cleave: Usage](#cleave-usage)
+    - [cleave: Parameters](#cleave-parameters)
+    - [cleave: Input files](#cleave-input-files)
+    - [cleave: Output files](#cleave-output-files)
+    - [cleave: Warnings (non-fatal)](#cleave-warnings-non-fatal)
+    - [cleave: Errors (fatal — program stops)](#cleave-errors-fatal--program-stops)
+    - [cleave: How H passivation works (`CapBondsWithH`)](#cleave-how-h-passivation-works-capbondswithh)
+    - [cleave: Examples](#cleave-examples)
+      - [diamond_111: C(111) slab from a CIF file (TOML mode)](#diamond_111-c111-slab-from-a-cif-file-toml-mode)
+      - [TiO2_m5m20: (-5 -2 0) slab from a POSCAR (command-line mode)](#tio2_m5m20--5--2-0-slab-from-a-poscar-command-line-mode)
+  - [mismatch — search lattice-matched interfaces](#mismatch--search-lattice-matched-interfaces)
+    - [mismatch: Usage](#mismatch-usage)
+    - [mismatch: Parameters](#mismatch-parameters)
+    - [mismatch: TOML input](#mismatch-toml-input)
+    - [mismatch: Output files](#mismatch-output-files)
+    - [mismatch: Notes on `FlipSlab1Z`](#mismatch-notes-on-flipslab1z)
+    - [mismatch: Errors (fatal — program stops)](#mismatch-errors-fatal--program-stops)
+    - [mismatch: Examples](#mismatch-examples)
+      - [rutile_anatase: rutile / anatase TiO2 (TOML mode)](#rutile_anatase-rutile--anatase-tio2-toml-mode)
+      - [Ni_BN: h-BN monolayer on bulk Ni (TOML mode)](#ni_bn-h-bn-monolayer-on-bulk-ni-toml-mode)
+      - [LCO_LPS: LiCoO2 / Li3PS4 (command-line mode)](#lco_lps-licoo2--li3ps4-command-line-mode)
+      - [MXene_MoS2: MoS2 / Mo2CO2 monolayers (command-line mode)](#mxene_mos2-mos2--mo2co2-monolayers-command-line-mode)
+  - [combine — stack two slabs into a heterostructure](#combine--stack-two-slabs-into-a-heterostructure)
+    - [combine: Usage](#combine-usage)
+    - [combine: Parameters](#combine-parameters)
+    - [combine: TOML input](#combine-toml-input)
+    - [combine: Output files](#combine-output-files)
+    - [combine: Notes on `FlipSlab1Z`](#combine-notes-on-flipslab1z)
+    - [combine: Errors (fatal — program stops)](#combine-errors-fatal--program-stops)
+    - [combine: Examples](#combine-examples)
+      - [rutile_anatase: stack a matched rutile / anatase pair](#rutile_anatase-stack-a-matched-rutile--anatase-pair)
+      - [MoS2_MXene: stack monolayer MoS2 on Mo2CO2](#mos2_mxene-stack-monolayer-mos2-on-mo2co2)
 
-(supercell)=
+
 ## supercell — expand a cell into a supercell
 
 Build a supercell from a structure file
@@ -41,8 +52,7 @@ Build a supercell from a structure file
 `calypso.utils.supercell.SupercellExpanderIO`). `Selective Dynamics` flags are
 copied to every image.
 
-(supercell-usage)=
-### Usage
+### supercell: Usage
 
 ```bash
 # 2D: expand a and b, keep c
@@ -55,8 +65,7 @@ calypso.x supercell -p POSCAR.vasp -m 2 2 2 -s POSCAR_super.vasp
 calypso.x supercell -p POSCAR.vasp -m 2 1 0 -1 2 0 0 0 1
 ```
 
-(supercell-parameters)=
-### Parameters
+### supercell: Parameters
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
@@ -65,14 +74,12 @@ calypso.x supercell -p POSCAR.vasp -m 2 1 0 -1 2 0 0 0 1
 | `--scfilename`, `-s` | path | `POSCAR_super.vasp` | Output supercell file. |
 | `--scformat`, `-f` | str | `vasp` | Output file format. |
 
-(supercell-output-files)=
-### Output files
+### supercell: Output files
 
 - **Supercell structure** — `--scfilename` (default `POSCAR_super.vasp`), in the
   format given by `--scformat`.
 
-(supercell-examples)=
-### Examples
+### supercell: Examples
 
 The example files are in `example/cli_supercell/` of CALYPSO-Python.
 
@@ -174,7 +181,6 @@ Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_supercell/H2
 
 ---
 
-(cleave)=
 ## cleave — generate a surface slab
 
 Generate a surface slab from a bulk crystal structure
@@ -187,8 +193,7 @@ Two input modes are supported:
 2. **TOML file** — write parameters into a TOML file and pass `--input`.
    When `--input` is supplied, all other flags are ignored.
 
-(cleave-usage)=
-### Usage
+### cleave: Usage
 
 ```bash
 # Mode 1: direct command-line parameters
@@ -201,8 +206,7 @@ calypso.x cleave --spacegroup 227 \
 calypso.x cleave --input input.toml
 ```
 
-(cleave-parameters)=
-### Parameters
+### cleave: Parameters
 
 | Flag | TOML key | Type | Default | Description |
 |------|----------|------|---------|-------------|
@@ -226,8 +230,7 @@ calypso.x cleave --input input.toml
 | `--cleavefilepath`, `-o` | `CleaveFilePath` | path | auto | Output slab file. Default: `POSCAR_{millerindex}_slab.vasp`. |
 | `--cleavefileformat` | `CleaveFileFormat` | str | `vasp` | Output file format (e.g. `vasp`, `extxyz`). |
 
-(cleave-input-files)=
-### Input files
+### cleave: Input files
 
 - **Direct mode** (`--usefile` not set): no input file; the structure is built
   from `--spacegroup`, `--latticeparameters` and `--irreducibleatoms`.
@@ -253,8 +256,7 @@ calypso.x cleave --input input.toml
   CleaveFileFormat  = "vasp"
   ```
 
-(cleave-output-files)=
-### Output files
+### cleave: Output files
 
 Running `cleave` writes three files (the slab next to where you point
 `--cleavefilepath`, the two side-car files in the same directory):
@@ -265,8 +267,7 @@ Running `cleave` writes three files (the slab next to where you point
 - **`wb-surfgin.toml`** — a summary of every parameter used for the run,
   reusable directly as `--input`.
 
-(cleave-warnings)=
-### Warnings (non-fatal)
+### cleave: Warnings (non-fatal)
 
 These are emitted via Python `warnings.warn` (`UserWarning`). They print a
 message but the run continues and a slab is still produced.
@@ -277,8 +278,7 @@ message but the run continues and a slab is still produced.
 | Supercell ran out of atoms before reaching `NumLayers` | *Requested too many layers; reduced to N layers (ran out of atoms in the supercell).* | The slab is built with the achievable number of layers `N` (see `num_layers_out`) instead of the requested `NumLayers`. Increase `SlabTotalThick`, or request fewer layers, to avoid it. |
 | The above happened **and** `CapBondsWithH` is set | *Cannot passivate dangling bonds with H when the layer count was reduced.* | A second warning, alerting that passivation may be unreliable for the reduced slab. |
 
-(cleave-errors)=
-### Errors (fatal — program stops)
+### cleave: Errors (fatal — program stops)
 
 These raise an exception and abort the `cleave` run; no slab is written.
 
@@ -290,8 +290,7 @@ These raise an exception and abort the `cleave` run; no slab is written.
 | `ValueError` | Direct mode (`--usefile` not set) with missing/invalid inputs | Reported for any of: `SpaceGroup` not in 1–230, `LatticeParameters` missing, `IrreducibleAtoms` missing. |
 | `ValueError` | `LatticeParameters` cannot form a valid cell | *Invalid LatticeParameters …: could not build lattice matrix.* |
 
-(cleave-how-h-passivation-works)=
-### How H passivation works (`CapBondsWithH`)
+### cleave: How H passivation works (`CapBondsWithH`)
 
 When `CapBondsWithH` is enabled, dangling bonds on the **bottom** side of the
 slab are saturated with hydrogen by the Fortran routine `capbond_with_h`. The
@@ -356,8 +355,7 @@ The number of H atoms added is printed at run time
 (`Number of passivation H atoms: …`). Note the warning above: if the layer
 count had to be reduced, passivation may be unreliable for that slab.
 
-(cleave-examples)=
-### Examples
+### cleave: Examples
 
 The example files are in `example/cli_cleave_surface/` of CALYPSO-Python.
 
@@ -723,7 +721,6 @@ Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_cleave_surfa
 
 ---
 
-(mismatch)=
 ## mismatch — search lattice-matched interfaces
 
 Search lattice-matched supercell interfaces between two crystals via the
@@ -741,8 +738,7 @@ The input TOML file is user-controlled. If you run with command-line flags,
 CALYPSO does **not** create `mismatch.toml`. In both modes, CALYPSO writes a
 separate full parameter summary named `wb-mismatch.toml` under `OutputDir`.
 
-(mismatch-usage)=
-### Usage
+### mismatch: Usage
 
 ```bash
 # Mode 1: direct command-line parameters
@@ -754,8 +750,7 @@ calypso.x mismatch -f1 lat1.cif -f2 lat2.cif \
 calypso.x mismatch --input mismatch.toml
 ```
 
-(mismatch-parameters)=
-### Parameters
+### mismatch: Parameters
 
 The TOML file has `[CRYSTAL1]` for the upper crystal, `[CRYSTAL2]` for the
 lower crystal, `[MATCHING]` for search/output parameters, and an optional
@@ -811,8 +806,7 @@ names are case-insensitive. Stacking keys may be written in `[MATCHING]` or
 | `--flip-slab1-z` / `--no-flip-slab1-z` | `FlipSlab1Z` | bool | `true` | Mirror the upper slab (`slab1`) along z before stacking, so its outer surface can face the vacuum and the opposite side faces the interface. |
 | `--pairformat` | `PairFormat` | str | `vasp` | Output structure format for pair directories. |
 
-(mismatch-toml-input)=
-### TOML input
+### mismatch: TOML input
 
 ```toml
 [CRYSTAL1]
@@ -862,8 +856,7 @@ Typ        = 1
 FlipSlab1Z = true
 ```
 
-(mismatch-output-files)=
-### Output files
+### mismatch: Output files
 
 Written under `OutputDir`:
 
@@ -882,8 +875,7 @@ Path fields written to `wb-mismatch.toml` are absolute paths, including
 only present if the user supplied one) from CALYPSO's generated summary file
 (`wb-mismatch.toml`).
 
-(mismatch-notes-on-flipslab1z)=
-### Notes on `FlipSlab1Z`
+### mismatch: Notes on `FlipSlab1Z`
 
 `slab2` is placed below and `slab1` above. With `FlipSlab1Z=true` (the default),
 `slab1` is mirrored within its occupied z range before stacking. This is useful
@@ -891,8 +883,7 @@ when the upper slab should be turned over so its interface side faces downward
 and its outer/passivated side faces the vacuum. Set `FlipSlab1Z=false` to stack
 `slab1` without this z inversion.
 
-(mismatch-errors)=
-### Errors (fatal — program stops)
+### mismatch: Errors (fatal — program stops)
 
 | Exception | When |
 |-----------|------|
@@ -901,8 +892,7 @@ and its outer/passivated side faces the vacuum. Set `FlipSlab1Z=false` to stack
 | `ValueError` | A `--SpecifyingMillerIndex*` list whose length is not a multiple of 3. |
 | `KeyError` | TOML missing `[CRYSTAL1]` / `[CRYSTAL2]`, or either missing `FilePath`. |
 
-(mismatch-examples)=
-### Examples
+### mismatch: Examples
 
 The example files are in `example/cli_mismatch/` of CALYPSO-Python.
 
@@ -1544,7 +1534,6 @@ Run `bash run_cli.sh`; afterwards the folder contains (`example/cli_mismatch/MXe
 
 ---
 
-(combine)=
 ## combine — stack two slabs into a heterostructure
 
 Stack two already lattice-matched slabs into one heterostructure interface.
@@ -1563,8 +1552,7 @@ CALYPSO does **not** create `combine.toml`. In both modes, CALYPSO writes a
 separate summary named `wb-combine.toml` next to the output structure unless
 summary writing is disabled by the Python API.
 
-(combine-usage)=
-### Usage
+### combine: Usage
 
 ```bash
 # Mode 1: direct command-line parameters
@@ -1579,8 +1567,7 @@ calypso.x combine -f1 lat1_supercell.vasp -f2 lat2_supercell.vasp \
 calypso.x combine --input combine.toml
 ```
 
-(combine-parameters)=
-### Parameters
+### combine: Parameters
 
 The TOML file has `[STRUCTURE1]` for the upper slab, `[STRUCTURE2]` for the
 lower slab, and `[COMBINE]` for stacking/output parameters. Section and key
@@ -1603,8 +1590,7 @@ names are case-insensitive.
 `WriteSummary` is not written into `wb-combine.toml`. It is only an internal
 Python API switch controlling whether the summary file is generated.
 
-(combine-toml-input)=
-### TOML input
+### combine: TOML input
 
 ```toml
 [STRUCTURE1]
@@ -1624,8 +1610,7 @@ OutputFile   = "combined_interface.vasp"
 OutputFormat = "vasp"
 ```
 
-(combine-output-files)=
-### Output files
+### combine: Output files
 
 - **Combined structure** — `OutputFile`, in the format specified by
   `OutputFormat`.
@@ -1639,15 +1624,13 @@ summary file intentionally does not include `WriteSummary`.
 Each slab's selective-dynamics mask is carried through into the combined
 structure unchanged.
 
-(combine-notes-on-flipslab1z)=
-### Notes on `FlipSlab1Z`
+### combine: Notes on `FlipSlab1Z`
 
 With `FlipSlab1Z=true` (default), structure 1 is mirrored in z within its own
 occupied thickness before it is placed above structure 2. Set it to `false` if
 the two slabs have already been oriented exactly as desired.
 
-(combine-errors)=
-### Errors (fatal — program stops)
+### combine: Errors (fatal — program stops)
 
 | Exception | When |
 |-----------|------|
@@ -1655,8 +1638,7 @@ the two slabs have already been oriented exactly as desired.
 | `ValueError` | Direct mode without both `--filepath1` and `--filepath2`. |
 | `KeyError` | TOML missing `[STRUCTURE1]` / `[STRUCTURE2]`, or either missing `FilePath`. |
 
-(combine-examples)=
-### Examples
+### combine: Examples
 
 The example files are in `example/cli_combine/` of CALYPSO-Python.
 
