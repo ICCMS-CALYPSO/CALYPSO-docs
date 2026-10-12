@@ -1470,8 +1470,9 @@ MaxStep = 2          # number of generations
 
 [CALYPSO.GENERATOR]
 FormulaUnit = ["(Ti)1(O)4"]        # atoms of the interface region
-# DistanceOfIon is not set: RandScheme = 2 uses CoordinateNumber, the
-# minimal distances are estimated from covalent radii
+DistanceOfIon = [["X",  "Ti", "O"],   # RandScheme = 2 generates with CoordinateNumber
+                 ["Ti", 1.5,  1.4],   # (below); the PSO evolution (PSOratio > 0)
+                 ["O",  1.4,  1.2]]   # needs the minimal distances
 Substrate1Path = "./SUB1.vasp"     # rutile slab
 Substrate2Path = "./SUB2.vasp"     # anatase slab
 RandScheme = 2                     # bonding constraints
@@ -1550,8 +1551,9 @@ MaxStep = 2          # number of generations
 
 [CALYPSO.GENERATOR]
 FormulaUnit = ["(Ti)1(O)4"]        # atoms of the interface region
-# DistanceOfIon is not set: RandScheme = 2 uses CoordinateNumber, the
-# minimal distances are estimated from covalent radii
+DistanceOfIon = [["X",  "Ti", "O"],   # RandScheme = 2 generates with CoordinateNumber
+                 ["Ti", 1.5,  1.4],   # (below); the PSO evolution (PSOratio > 0)
+                 ["O",  1.4,  1.2]]   # needs the minimal distances
 Substrate1Path = "./SUB1.vasp"     # rutile slab
 Substrate2Path = "./SUB2.vasp"     # anatase slab
 RandScheme = 2                     # bonding constraints
